@@ -5,13 +5,14 @@ CREATE TABLE IF NOT EXISTS users (
     password   VARCHAR(255) NOT NULL,
     role       VARCHAR(20)  NOT NULL DEFAULT 'client',
     created_at TIMESTAMP    NOT NULL DEFAULT NOW()
-    );
+);
 
 CREATE TABLE IF NOT EXISTS destinations (
-   id                SERIAL PRIMARY KEY,
-   name              VARCHAR(100) NOT NULL UNIQUE,
-   description       TEXT,
-   created_at        TIMESTAMP NOT NULL DEFAULT NOW()
+    id                SERIAL PRIMARY KEY,
+    name              VARCHAR(100) NOT NULL UNIQUE,
+    description       TEXT,
+    image_url         TEXT,
+    created_at        TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS tours (
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS tours (
     end_date       TIMESTAMP      NOT NULL,
     capacity       INT            NOT NULL,
     created_at     TIMESTAMP      NOT NULL DEFAULT NOW()
- );
+);
 
 CREATE TABLE IF NOT EXISTS bookings (
     id         SERIAL PRIMARY KEY,
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     status     VARCHAR(20)  NOT NULL DEFAULT 'pending',
     created_at TIMESTAMP    NOT NULL DEFAULT NOW()
 );
+
 CREATE TABLE IF NOT EXISTS payments (
     id         SERIAL PRIMARY KEY,
     booking_id INT           NOT NULL REFERENCES bookings(id),
@@ -42,8 +44,8 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 
 CREATE TABLE IF NOT EXISTS reviews (
-   id         SERIAL PRIMARY KEY,
-   user_id    INT       NOT NULL REFERENCES users(id),
+    id         SERIAL PRIMARY KEY,
+    user_id    INT       NOT NULL REFERENCES users(id),
     tour_id    INT       NOT NULL REFERENCES tours(id),
     rating     INT       NOT NULL,
     comment    TEXT,
