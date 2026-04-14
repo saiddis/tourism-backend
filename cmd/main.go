@@ -16,7 +16,7 @@ func main() {
 	// 1. Загружаем конфиг
 	cfg := config.Load()
 
-	middleware.InitSecret(cfg.JWTSecret)
+	middleware.InitSecrets(cfg.AccessTokenSecret, cfg.RefreshTokenSecret)
 	// 2. Подключаемся к БД
 	db, err := storage.NewPostgresDB(cfg)
 	if err != nil {
@@ -45,7 +45,7 @@ func main() {
 	userHandler := handler.NewUserHandler(userService)
 	tourHandler := handler.NewTourHandler(tourService)
 	bookingHandler := handler.NewBookingHandler(bookingService)
-	paymentHandler := handler.NewPaymentHandler(paymentService)
+	paymentHandler := handler.NewPaymentHandler(paymentService, bookingService)
 	reviewHandler := handler.NewReviewHandler(reviewService)
 	destinationHandler := handler.NewDestinationHandler(destinationService)
 

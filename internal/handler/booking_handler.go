@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"tourism-backend/internal/domain"
+	middleware "tourism-backend/internal/middlewares"
 	"tourism-backend/internal/service"
 
 	"github.com/go-chi/chi/v5"
@@ -24,6 +25,14 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
+
+	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	booking.UserID = claims.UserID
 	result, err := h.service.Create(&booking)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
@@ -47,6 +56,17 @@ func (h *BookingHandler) GetByUserID(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
+
+	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	if claims.UserID != id && claims.Role != "manager" && claims.Role != "admin" {
+		respondError(w, http.StatusForbidden, "forbidden")
+		return
+	}
+
 	bookings, err := h.service.GetByUserID(id)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())

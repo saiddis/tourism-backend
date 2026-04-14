@@ -23,6 +23,8 @@ func NewRouter(
 	// 🔓 Открытые endpoints
 	r.Post("/auth/register", userHandler.Register)
 	r.Post("/auth/login", userHandler.Login)
+	r.Post("/auth/refresh", userHandler.Refresh)
+	r.Delete("/auth/logout", userHandler.Logout)
 	r.Get("/tours", tourHandler.GetAll)
 	r.Get("/tours/{id}", tourHandler.GetByID)
 	r.Get("/tours/destination/{id}", tourHandler.GetByDestinationID)
@@ -34,6 +36,7 @@ func NewRouter(
 		r.Use(middleware.AuthMiddleware)
 
 		// Client и выше
+		r.Get("/users/me", userHandler.Me)
 		r.Post("/bookings", bookingHandler.Create)
 		r.Get("/bookings/user/{id}", bookingHandler.GetByUserID)
 		r.Post("/reviews", reviewHandler.Create)
