@@ -18,7 +18,8 @@ func (r *DestinationRepositoryPostgres) Create(destination *domain.Destination) 
 	return r.db.QueryRow(queries.CreateDestination,
 		destination.Name,
 		destination.Description,
-	).Scan(&destination.ID, &destination.CreatedAt)
+		destination.ImageURL,
+	).Scan(&destination.ID, &destination.ImageURL, &destination.CreatedAt)
 }
 
 func (r *DestinationRepositoryPostgres) GetByID(id int) (*domain.Destination, error) {
@@ -27,6 +28,7 @@ func (r *DestinationRepositoryPostgres) GetByID(id int) (*domain.Destination, er
 		&destination.ID,
 		&destination.Name,
 		&destination.Description,
+		&destination.ImageURL,
 		&destination.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -48,6 +50,7 @@ func (r *DestinationRepositoryPostgres) GetAll() ([]*domain.Destination, error) 
 			&destination.ID,
 			&destination.Name,
 			&destination.Description,
+			&destination.ImageURL,
 			&destination.CreatedAt,
 		)
 		if err != nil {

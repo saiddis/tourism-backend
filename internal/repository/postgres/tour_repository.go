@@ -20,17 +20,7 @@ func (r *TourRepositoryPostgres) Create(tour *domain.Tour) error {
 
 func (r *TourRepositoryPostgres) GetByID(id int) (*domain.Tour, error) {
 	var tour domain.Tour
-	err := r.db.QueryRow(queries.GetTourByID, id).Scan(
-		&tour.ID,
-		&tour.DestinationID,
-		&tour.Name,
-		&tour.Description,
-		&tour.Price,
-		&tour.StartDate,
-		&tour.EndDate,
-		&tour.Capacity,
-		&tour.CreatedAt,
-	)
+	err := scanTour(r.db.QueryRow(queries.GetTourByID, id), &tour)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -46,17 +36,7 @@ func (r *TourRepositoryPostgres) GetAll() ([]*domain.Tour, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var tour domain.Tour
-		err = rows.Scan(
-			&tour.ID,
-			&tour.DestinationID,
-			&tour.Name,
-			&tour.Description,
-			&tour.Price,
-			&tour.StartDate,
-			&tour.EndDate,
-			&tour.Capacity,
-			&tour.CreatedAt,
-		)
+		err = scanTour(rows, &tour)
 		if err != nil {
 			return nil, err
 		}
@@ -74,17 +54,7 @@ func (r *TourRepositoryPostgres) GetByDestinationID(destinationID int) ([]*domai
 	defer rows.Close()
 	for rows.Next() {
 		var tour domain.Tour
-		err = rows.Scan(
-			&tour.ID,
-			&tour.DestinationID,
-			&tour.Name,
-			&tour.Description,
-			&tour.Price,
-			&tour.StartDate,
-			&tour.EndDate,
-			&tour.Capacity,
-			&tour.CreatedAt,
-		)
+		err = scanTour(rows, &tour)
 		if err != nil {
 			return nil, err
 		}
@@ -109,4 +79,33 @@ func (r *TourRepositoryPostgres) Update(tour *domain.Tour) error {
 func (r *TourRepositoryPostgres) Delete(id int) error {
 	_, err := r.db.Exec(queries.DeleteTour, id)
 	return err
+}
+
+type rowScanner interface {
+	Scan(dest ...any) error
+}
+
+func scanTour(scanner rowScanner, tour *domain.Tour) error {
+	destination := &domain.Destination{}
+	err := scanner.Scan(
+		&tour.ID,
+		&tour.DestinationID,
+		&tour.Name,
+		&tour.Description,
+		&tour.Price,
+		&tour.StartDate,
+		&tour.EndDate,
+		&tour.Capacity,
+		&tour.CreatedAt,
+		&destination.ID,
+		&destination.Name,
+		&destination.Description,
+		&destination.ImageURL,
+		&destination.CreatedAt,
+	)
+	if err != nil {
+		return err
+	}
+	tour.Destination = destination
+	return nil
 }

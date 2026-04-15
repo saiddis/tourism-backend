@@ -24,13 +24,7 @@ func (r *BookingRepositoryPostgres) Create(booking *domain.Booking) error {
 
 func (r *BookingRepositoryPostgres) GetByID(id int) (*domain.Booking, error) {
 	var booking domain.Booking
-	err := r.db.QueryRow(queries.GetBookingByID, id).Scan(
-		&booking.ID,
-		&booking.UserID,
-		&booking.TourID,
-		&booking.Status,
-		&booking.CreatedAt,
-	)
+	err := scanBooking(r.db.QueryRow(queries.GetBookingByID, id), &booking)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -46,13 +40,7 @@ func (r *BookingRepositoryPostgres) GetByUserID(userID int) ([]*domain.Booking, 
 	defer rows.Close()
 	for rows.Next() {
 		var booking domain.Booking
-		err = rows.Scan(
-			&booking.ID,
-			&booking.UserID,
-			&booking.TourID,
-			&booking.Status,
-			&booking.CreatedAt,
-		)
+		err = scanBooking(rows, &booking)
 		if err != nil {
 			return nil, err
 		}
@@ -70,13 +58,7 @@ func (r *BookingRepositoryPostgres) GetAll() ([]*domain.Booking, error) {
 	defer rows.Close()
 	for rows.Next() {
 		var booking domain.Booking
-		err = rows.Scan(
-			&booking.ID,
-			&booking.UserID,
-			&booking.TourID,
-			&booking.Status,
-			&booking.CreatedAt,
-		)
+		err = scanBooking(rows, &booking)
 		if err != nil {
 			return nil, err
 		}
@@ -93,4 +75,37 @@ func (r *BookingRepositoryPostgres) UpdateStatus(id int, status domain.BookingSt
 func (r *BookingRepositoryPostgres) Delete(id int) error {
 	_, err := r.db.Exec(queries.DeleteBooking, id)
 	return err
+}
+
+func scanBooking(scanner rowScanner, booking *domain.Booking) error {
+	tour := &domain.Tour{}
+	destination := &domain.Destination{}
+	err := scanner.Scan(
+		&booking.ID,
+		&booking.UserID,
+		&booking.TourID,
+		&booking.Status,
+		&booking.CreatedAt,
+		&tour.ID,
+		&tour.DestinationID,
+		&tour.Name,
+		&tour.Description,
+		&tour.Price,
+		&tour.StartDate,
+		&tour.EndDate,
+		&tour.Capacity,
+		&tour.CreatedAt,
+		&destination.ID,
+		&destination.Name,
+		&destination.Description,
+		&destination.ImageURL,
+		&destination.CreatedAt,
+	)
+	if err != nil {
+		return err
+	}
+	tour.Destination = destination
+	booking.Tour = tour
+	booking.Destination = destination
+	return nil
 }

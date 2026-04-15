@@ -7,9 +7,43 @@ INSERT INTO tours (destination_id,name,description,price,start_date,end_date,cap
 VALUES ($1,$2,$3,$4,$5,$6,$7)
 returning id,created_at`
 	GetTourByID = `
-SELECT * from tours where id = $1`
+SELECT
+	t.id,
+	t.destination_id,
+	t.name,
+	t.description,
+	t.price,
+	t.start_date,
+	t.end_date,
+	t.capacity,
+	t.created_at,
+	d.id,
+	d.name,
+	d.description,
+	d.image_url,
+	d.created_at
+FROM tours t
+JOIN destinations d ON d.id = t.destination_id
+WHERE t.id = $1`
 	GetAllTours = `
-SELECT * from tours`
+SELECT
+	t.id,
+	t.destination_id,
+	t.name,
+	t.description,
+	t.price,
+	t.start_date,
+	t.end_date,
+	t.capacity,
+	t.created_at,
+	d.id,
+	d.name,
+	d.description,
+	d.image_url,
+	d.created_at
+FROM tours t
+JOIN destinations d ON d.id = t.destination_id
+ORDER BY t.start_date, t.id`
 	UpdateTour = `
 UPDATE tours 
 	SET destination_id=$1, name=$2, description=$3,
@@ -19,7 +53,23 @@ UPDATE tours
 	DeleteTour = `
 	DELETE FROM tours WHERE id = $1`
 	GetToursByDestinationID = `
-SELECT id, destination_id, name, description,
-       price, start_date, end_date, capacity, created_at
-FROM tours WHERE destination_id = $1`
+SELECT
+	t.id,
+	t.destination_id,
+	t.name,
+	t.description,
+	t.price,
+	t.start_date,
+	t.end_date,
+	t.capacity,
+	t.created_at,
+	d.id,
+	d.name,
+	d.description,
+	d.image_url,
+	d.created_at
+FROM tours t
+JOIN destinations d ON d.id = t.destination_id
+WHERE t.destination_id = $1
+ORDER BY t.start_date, t.id`
 )
