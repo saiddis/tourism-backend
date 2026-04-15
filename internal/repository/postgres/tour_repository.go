@@ -38,7 +38,7 @@ func (r *TourRepositoryPostgres) GetByID(id int) (*domain.Tour, error) {
 }
 
 func (r *TourRepositoryPostgres) GetAll() ([]*domain.Tour, error) {
-	var tours []*domain.Tour
+	tours := make([]*domain.Tour, 0)
 	rows, err := r.db.Query(queries.GetAllTours)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (r *TourRepositoryPostgres) GetAll() ([]*domain.Tour, error) {
 }
 
 func (r *TourRepositoryPostgres) GetByDestinationID(destinationID int) ([]*domain.Tour, error) {
-	var tours []*domain.Tour
+	tours := make([]*domain.Tour, 0)
 	rows, err := r.db.Query(queries.GetToursByDestinationID, destinationID)
 	if err != nil {
 		return nil, err

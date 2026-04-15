@@ -88,6 +88,30 @@ func (h *BookingHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
+
+	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	if claims.Role != "manager" && claims.Role != "admin" {
+		if req.Status != domain.BookingStatusCancelled {
+			respondError(w, http.StatusForbidden, "forbidden")
+			return
+		}
+
+		booking, err := h.service.GetByID(id)
+		if err != nil {
+			respondError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		if booking.UserID != claims.UserID {
+			respondError(w, http.StatusForbidden, "forbidden")
+			return
+		}
+	}
+
 	if err := h.service.UpdateStatus(id, req.Status); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return

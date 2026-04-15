@@ -24,7 +24,7 @@ func (r *ReviewRepositoryPostgres) Create(review *domain.Review) error {
 }
 
 func (r *ReviewRepositoryPostgres) GetByTourID(tourID int) ([]*domain.Review, error) {
-	var reviews []*domain.Review
+	reviews := make([]*domain.Review, 0)
 	rows, err := r.db.Query(queries.GetReviewsByTourID, tourID)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (r *ReviewRepositoryPostgres) GetByTourID(tourID int) ([]*domain.Review, er
 }
 
 func (r *ReviewRepositoryPostgres) GetByUserID(userID int) ([]*domain.Review, error) {
-	var reviews []*domain.Review
+	reviews := make([]*domain.Review, 0)
 	rows, err := r.db.Query(queries.GetReviewsByUserID, userID)
 	if err != nil {
 		return nil, err

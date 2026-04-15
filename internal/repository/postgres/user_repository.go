@@ -34,7 +34,7 @@ func (r *UserRepositoryPostgres) GetAll() ([]*domain.User, error) {
 		return nil, err
 	}
 	defer rows.Close()
-	var users []*domain.User
+	users := make([]*domain.User, 0)
 	for rows.Next() {
 		user := &domain.User{}
 		err := rows.Scan(

@@ -36,7 +36,7 @@ func (r *DestinationRepositoryPostgres) GetByID(id int) (*domain.Destination, er
 }
 
 func (r *DestinationRepositoryPostgres) GetAll() ([]*domain.Destination, error) {
-	var destinations []*domain.Destination
+	destinations := make([]*domain.Destination, 0)
 	rows, err := r.db.Query(queries.GetAllDestinations)
 	if err != nil {
 		return nil, err

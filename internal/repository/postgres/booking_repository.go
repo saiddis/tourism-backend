@@ -38,7 +38,7 @@ func (r *BookingRepositoryPostgres) GetByID(id int) (*domain.Booking, error) {
 }
 
 func (r *BookingRepositoryPostgres) GetByUserID(userID int) ([]*domain.Booking, error) {
-	var bookings []*domain.Booking
+	bookings := make([]*domain.Booking, 0)
 	rows, err := r.db.Query(queries.GetBookingsByUserID, userID)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (r *BookingRepositoryPostgres) GetByUserID(userID int) ([]*domain.Booking, 
 }
 
 func (r *BookingRepositoryPostgres) GetAll() ([]*domain.Booking, error) {
-	var bookings []*domain.Booking
+	bookings := make([]*domain.Booking, 0)
 	rows, err := r.db.Query(queries.GetAllBookings)
 	if err != nil {
 		return nil, err
