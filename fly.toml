@@ -1,19 +1,20 @@
-app = "tourism-backend"
-primary_region = "bom"
+# fly.toml app configuration file generated for tourism-backend on 2026-04-15T04:32:08Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'tourism-backend'
+primary_region = 'bom'
 
 [build]
-  dockerfile = "Dockerfile"
-
-[env]
-  PORT = "8080"
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
 [[vm]]
   memory = "256mb"
