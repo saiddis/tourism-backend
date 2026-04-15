@@ -86,26 +86,35 @@ type rowScanner interface {
 }
 
 func scanTour(scanner rowScanner, tour *domain.Tour) error {
-	destination := &domain.Destination{}
+	var description sql.NullString
+	var destinationDescription sql.NullString
+	var destinationImageURL sql.NullString
+	var destinationCreatedAt sql.NullTime
+	var joinedDestinationID int
 	err := scanner.Scan(
 		&tour.ID,
 		&tour.DestinationID,
 		&tour.Name,
-		&tour.Description,
+		&description,
 		&tour.Price,
 		&tour.StartDate,
 		&tour.EndDate,
 		&tour.Capacity,
 		&tour.CreatedAt,
-		&destination.ID,
-		&destination.Name,
-		&destination.Description,
-		&destination.ImageURL,
-		&destination.CreatedAt,
+		&joinedDestinationID,
+		&tour.DestinationName,
+		&destinationDescription,
+		&destinationImageURL,
+		&destinationCreatedAt,
 	)
 	if err != nil {
 		return err
 	}
-	tour.Destination = destination
+	tour.Description = description.String
+	tour.DestinationDescription = destinationDescription.String
+	tour.DestinationImageURL = destinationImageURL.String
+	if tour.DestinationID == 0 {
+		tour.DestinationID = joinedDestinationID
+	}
 	return nil
 }

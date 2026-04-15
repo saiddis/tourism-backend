@@ -78,34 +78,43 @@ func (r *BookingRepositoryPostgres) Delete(id int) error {
 }
 
 func scanBooking(scanner rowScanner, booking *domain.Booking) error {
-	tour := &domain.Tour{}
-	destination := &domain.Destination{}
+	var tourDescription sql.NullString
+	var destinationDescription sql.NullString
+	var destinationImageURL sql.NullString
+	var tourCreatedAt sql.NullTime
+	var destinationCreatedAt sql.NullTime
+	var joinedTourID int
+	var joinedDestinationID int
 	err := scanner.Scan(
 		&booking.ID,
 		&booking.UserID,
 		&booking.TourID,
 		&booking.Status,
 		&booking.CreatedAt,
-		&tour.ID,
-		&tour.DestinationID,
-		&tour.Name,
-		&tour.Description,
-		&tour.Price,
-		&tour.StartDate,
-		&tour.EndDate,
-		&tour.Capacity,
-		&tour.CreatedAt,
-		&destination.ID,
-		&destination.Name,
-		&destination.Description,
-		&destination.ImageURL,
-		&destination.CreatedAt,
+		&joinedTourID,
+		&joinedDestinationID,
+		&booking.TourName,
+		&tourDescription,
+		&booking.TourPrice,
+		&booking.TourStartDate,
+		&booking.TourEndDate,
+		&booking.TourCapacity,
+		&tourCreatedAt,
+		&joinedDestinationID,
+		&booking.DestinationName,
+		&destinationDescription,
+		&destinationImageURL,
+		&destinationCreatedAt,
 	)
 	if err != nil {
 		return err
 	}
-	tour.Destination = destination
-	booking.Tour = tour
-	booking.Destination = destination
+	if booking.TourID == 0 {
+		booking.TourID = joinedTourID
+	}
+	booking.DestinationID = joinedDestinationID
+	booking.TourDescription = tourDescription.String
+	booking.DestinationDescription = destinationDescription.String
+	booking.DestinationImageURL = destinationImageURL.String
 	return nil
 }

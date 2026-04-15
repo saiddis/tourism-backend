@@ -24,13 +24,7 @@ func (r *DestinationRepositoryPostgres) Create(destination *domain.Destination) 
 
 func (r *DestinationRepositoryPostgres) GetByID(id int) (*domain.Destination, error) {
 	var destination domain.Destination
-	err := r.db.QueryRow(queries.GetDestinationByID, id).Scan(
-		&destination.ID,
-		&destination.Name,
-		&destination.Description,
-		&destination.ImageURL,
-		&destination.CreatedAt,
-	)
+	err := scanDestination(r.db.QueryRow(queries.GetDestinationByID, id), &destination)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -46,13 +40,7 @@ func (r *DestinationRepositoryPostgres) GetAll() ([]*domain.Destination, error) 
 	defer rows.Close()
 	for rows.Next() {
 		var destination domain.Destination
-		err = rows.Scan(
-			&destination.ID,
-			&destination.Name,
-			&destination.Description,
-			&destination.ImageURL,
-			&destination.CreatedAt,
-		)
+		err = scanDestination(rows, &destination)
 		if err != nil {
 			return nil, err
 		}
@@ -64,4 +52,22 @@ func (r *DestinationRepositoryPostgres) GetAll() ([]*domain.Destination, error) 
 func (r *DestinationRepositoryPostgres) Delete(id int) error {
 	_, err := r.db.Exec(queries.DeleteDestination, id)
 	return err
+}
+
+func scanDestination(scanner rowScanner, destination *domain.Destination) error {
+	var description sql.NullString
+	var imageURL sql.NullString
+	err := scanner.Scan(
+		&destination.ID,
+		&destination.Name,
+		&description,
+		&imageURL,
+		&destination.CreatedAt,
+	)
+	if err != nil {
+		return err
+	}
+	destination.Description = description.String
+	destination.ImageURL = imageURL.String
+	return nil
 }
