@@ -56,6 +56,11 @@ func (r *UserRepositoryPostgres) Update(user *domain.User) error {
 	return err
 }
 
+func (r *UserRepositoryPostgres) UpdatePasswordHash(id int, passwordHash string) error {
+	_, err := r.db.Exec(queries.UpdateUserPassword, passwordHash, id)
+	return err
+}
+
 func (r *UserRepositoryPostgres) Delete(id int) error {
 	_, err := r.db.Exec(queries.DeleteUser, id)
 	return err

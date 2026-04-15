@@ -2,8 +2,11 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
@@ -22,10 +25,16 @@ func (s *UserService) Register(name, email, password string) (*domain.User, erro
 	if exist != nil {
 		return nil, errors.New("user with this email already exists")
 	}
+
+	passwordHash, err := hashPassword(password)
+	if err != nil {
+		return nil, err
+	}
+
 	user := &domain.User{
 		Name:         name,
 		Email:        email,
-		PasswordHash: password,
+		PasswordHash: passwordHash,
 		Role:         domain.RoleClient,
 	}
 
@@ -44,9 +53,25 @@ func (s *UserService) Login(email, password string) (*domain.User, error) {
 		return nil, errors.New("user not found")
 	}
 
-	if user.PasswordHash != password {
+	passwordMatches, passwordWasUpgraded, err := s.checkPassword(user, password)
+	if err != nil {
+		return nil, err
+	}
+	if !passwordMatches {
 		return nil, errors.New("invalid password")
 	}
+
+	if passwordWasUpgraded {
+		hashedPassword, err := hashPassword(password)
+		if err != nil {
+			return nil, err
+		}
+		if err := s.repo.UpdatePasswordHash(user.ID, hashedPassword); err != nil {
+			return nil, err
+		}
+		user.PasswordHash = hashedPassword
+	}
+
 	return user, nil
 }
 
@@ -67,4 +92,33 @@ func (s *UserService) GetAll() ([]*domain.User, error) {
 		return nil, err
 	}
 	return users, nil
+}
+
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+func (s *UserService) checkPassword(user *domain.User, password string) (bool, bool, error) {
+	if isBcryptHash(user.PasswordHash) {
+		err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
+		if err == nil {
+			return true, false, nil
+		}
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return false, false, nil
+		}
+		return false, false, err
+	}
+
+	return user.PasswordHash == password, user.PasswordHash == password, nil
+}
+
+func isBcryptHash(passwordHash string) bool {
+	return strings.HasPrefix(passwordHash, "$2a$") ||
+		strings.HasPrefix(passwordHash, "$2b$") ||
+		strings.HasPrefix(passwordHash, "$2y$")
 }

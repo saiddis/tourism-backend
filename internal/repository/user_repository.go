@@ -8,6 +8,6 @@ type UserRepository interface {
 	GetByEmail(email string) (*domain.User, error)
 	GetAll() ([]*domain.User, error)
 	Update(user *domain.User) error
+	UpdatePasswordHash(id int, passwordHash string) error
 	Delete(id int) error
 }
-			
