@@ -19,6 +19,7 @@ func NewRouter(
 
 	r.Use(chiMiddleware.Logger)
 	r.Use(chiMiddleware.Recoverer)
+	r.Use(middleware.CORSMiddleware)
 
 	// 🔓 Открытые endpoints
 	r.Post("/auth/register", userHandler.Register)
