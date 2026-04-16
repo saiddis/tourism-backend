@@ -36,7 +36,23 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	respondJSON(w, http.StatusCreated, user)
+
+	tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role))
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to generate tokens")
+		return
+	}
+
+	setRefreshTokenCookie(w, tokens.RefreshToken, h.cookieDomain)
+
+	resp := map[string]interface{}{
+		"user":               user,
+		"access_token":       tokens.AccessToken,
+		"token_type":         "Bearer",
+		"access_expires_in":  tokens.AccessExpiresIn,
+		"refresh_expires_in": tokens.RefreshExpiresIn,
+	}
+	respondJSON(w, http.StatusCreated, resp)
 }
 
 func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
