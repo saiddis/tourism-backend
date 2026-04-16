@@ -13,11 +13,12 @@ import (
 )
 
 type UserHandler struct {
-	service *service.UserService
+	service      *service.UserService
+	cookieDomain string
 }
 
-func NewUserHandler(service *service.UserService) *UserHandler {
-	return &UserHandler{service: service}
+func NewUserHandler(service *service.UserService, cookieDomain string) *UserHandler {
+	return &UserHandler{service: service, cookieDomain: cookieDomain}
 }
 
 func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +62,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	setRefreshTokenCookie(w, tokens.RefreshToken)
+	setRefreshTokenCookie(w, tokens.RefreshToken, h.cookieDomain)
 
 	resp := map[string]interface{}{
 		"access_token":       tokens.AccessToken,
@@ -97,7 +98,7 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	setRefreshTokenCookie(w, tokens.RefreshToken)
+	setRefreshTokenCookie(w, tokens.RefreshToken, h.cookieDomain)
 
 	resp := map[string]interface{}{
 		"access_token":       tokens.AccessToken,
@@ -109,7 +110,7 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	clearRefreshTokenCookie(w)
+	clearRefreshTokenCookie(w, h.cookieDomain)
 	respondJSON(w, http.StatusOK, map[string]string{"message": "logged out"})
 }
 
@@ -123,8 +124,8 @@ func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, user)
 }
 
-func setRefreshTokenCookie(w http.ResponseWriter, token string) {
-	http.SetCookie(w, &http.Cookie{
+func setRefreshTokenCookie(w http.ResponseWriter, token string, domain string) {
+	cookie := &http.Cookie{
 		Name:     "refresh_token",
 		Value:    token,
 		HttpOnly: true,
@@ -132,7 +133,11 @@ func setRefreshTokenCookie(w http.ResponseWriter, token string) {
 		SameSite: http.SameSiteNoneMode,
 		Path:     "/",
 		Expires:  time.Now().Add(middleware.RefreshTokenTTL),
-	})
+	}
+	if domain != "" {
+		cookie.Domain = domain
+	}
+	http.SetCookie(w, cookie)
 }
 
 func getRefreshTokenFromCookie(r *http.Request) string {
@@ -143,8 +148,8 @@ func getRefreshTokenFromCookie(r *http.Request) string {
 	return cookie.Value
 }
 
-func clearRefreshTokenCookie(w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
+func clearRefreshTokenCookie(w http.ResponseWriter, domain string) {
+	cookie := &http.Cookie{
 		Name:     "refresh_token",
 		Value:    "",
 		HttpOnly: true,
@@ -152,7 +157,11 @@ func clearRefreshTokenCookie(w http.ResponseWriter) {
 		SameSite: http.SameSiteNoneMode,
 		Path:     "/",
 		MaxAge:   -1,
-	})
+	}
+	if domain != "" {
+		cookie.Domain = domain
+	}
+	http.SetCookie(w, cookie)
 }
 
 func (h *UserHandler) GetAll(w http.ResponseWriter, r *http.Request) {

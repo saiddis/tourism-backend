@@ -42,7 +42,7 @@ func main() {
 	destinationService := service.NewDestinationService(destinationRepo)
 
 	// 5. Handler
-	userHandler := handler.NewUserHandler(userService)
+	userHandler := handler.NewUserHandler(userService, cfg.CookieDomain)
 	tourHandler := handler.NewTourHandler(tourService)
 	bookingHandler := handler.NewBookingHandler(bookingService)
 	paymentHandler := handler.NewPaymentHandler(paymentService, bookingService)

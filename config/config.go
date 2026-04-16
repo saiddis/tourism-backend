@@ -11,6 +11,7 @@ type Config struct {
 	ServerPort         string
 	AccessTokenSecret  string
 	RefreshTokenSecret string
+	CookieDomain       string
 }
 
 func Load() *Config {
@@ -23,6 +24,7 @@ func Load() *Config {
 		ServerPort:         getEnv("SERVER_PORT", "8080"),
 		AccessTokenSecret:  getEnv("ACCESS_TOKEN_SECRET", "tourism"),
 		RefreshTokenSecret: getEnv("REFRESH_TOKEN_SECRET", "tourism"),
+		CookieDomain:       getEnv("COOKIE_DOMAIN", ""),
 	}
 }
 
