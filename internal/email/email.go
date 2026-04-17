@@ -13,7 +13,6 @@ type EmailService struct {
 	port       string
 	username   string
 	password   string
-	from       string
 	adminEmail string
 }
 
@@ -23,7 +22,6 @@ func NewEmailService() *EmailService {
 		port:       os.Getenv("SMTP_PORT"),
 		username:   os.Getenv("SMTP_USER"),
 		password:   os.Getenv("SMTP_PASSWORD"),
-		from:       os.Getenv("SMTP_FROM"),
 		adminEmail: os.Getenv("ADMIN_EMAIL"),
 	}
 }
@@ -94,9 +92,6 @@ Your provider application has been %s.
 
 func (s *EmailService) send(to, subject, body string) error {
 	from := s.username
-	if s.from != "" {
-		from = s.from
-	}
 
 	headers := fmt.Sprintf("From: %s\r\n"+
 		"To: %s\r\n"+
