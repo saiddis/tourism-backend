@@ -39,6 +39,8 @@ func NewRouter(
 	r.Get("/providers/user/{userId}", providerHandler.GetByUserID)
 	r.Get("/providers/{id}", providerHandler.GetByID)
 	r.Get("/tours/{id}/highlights", tourHighlightHandler.GetByTourID)
+	r.Get("/provider-applications/{id}/accept", providerAppHandler.AcceptByToken)
+	r.Get("/provider-applications/{id}/reject", providerAppHandler.RejectByToken)
 
 	// 🔐 Защищённые endpoints
 	r.Group(func(r chi.Router) {

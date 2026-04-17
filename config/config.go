@@ -9,6 +9,7 @@ type Config struct {
 	DBPassword         string
 	DBName             string
 	ServerPort         string
+	ServerURL          string
 	AccessTokenSecret  string
 	RefreshTokenSecret string
 	CookieDomain       string
@@ -23,6 +24,7 @@ func Load() *Config {
 		DBPassword:         getEnv("DB_PASSWORD", "postgres"),
 		DBName:             getEnv("DB_NAME", "tourism_db"),
 		ServerPort:         getEnv("SERVER_PORT", "8080"),
+		ServerURL:          getEnv("SERVER_URL", "http://localhost:8080"),
 		AccessTokenSecret:  getEnv("ACCESS_TOKEN_SECRET", "tourism"),
 		RefreshTokenSecret: getEnv("REFRESH_TOKEN_SECRET", "tourism"),
 		CookieDomain:       getEnv("COOKIE_DOMAIN", ""),

@@ -16,6 +16,7 @@ type EmailService struct {
 	fromEmail  string
 	fromName   string
 	adminEmail string
+	serverURL  string
 }
 
 func NewEmailService() *EmailService {
@@ -24,6 +25,7 @@ func NewEmailService() *EmailService {
 		fromEmail:  os.Getenv("MAILERSEND_FROM_EMAIL"),
 		fromName:   os.Getenv("MAILERSEND_FROM_NAME"),
 		adminEmail: os.Getenv("ADMIN_EMAIL"),
+		serverURL:  os.Getenv("SERVER_URL"),
 	}
 }
 
@@ -33,6 +35,13 @@ func (s *EmailService) SendProviderApplicationEmail(userName, userEmail string, 
 	}
 
 	subject := fmt.Sprintf("New Provider Application from %s", userName)
+
+	serverURL := s.serverURL
+	if serverURL == "" {
+		serverURL = "http://localhost:8080"
+	}
+	acceptURL := fmt.Sprintf("%s/provider-applications/%d/accept?token=%s", serverURL, app.ID, app.AdminToken)
+	rejectURL := fmt.Sprintf("%s/provider-applications/%d/reject?token=%s", serverURL, app.ID, app.AdminToken)
 
 	body := fmt.Sprintf(`New Provider Application
 
@@ -52,6 +61,11 @@ Facebook: %s
 
 Application ID: %d
 Submitted: %s
+
+---
+Quick Actions:
+Accept: %s
+Reject: %s
 `,
 		userName,
 		userEmail,
@@ -64,6 +78,8 @@ Submitted: %s
 		nullableString(app.FacebookURL),
 		app.ID,
 		app.CreatedAt.Format("2006-01-02 15:04:05"),
+		acceptURL,
+		rejectURL,
 	)
 
 	return s.send(s.adminEmail, subject, body)

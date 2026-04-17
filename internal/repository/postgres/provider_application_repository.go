@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+	"crypto/rand"
 	"database/sql"
+	"encoding/hex"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository/queries"
 )
@@ -15,7 +17,21 @@ func NewProviderApplicationRepository(db *sql.DB) *ProviderApplicationRepository
 	return &ProviderApplicationRepositoryPostgres{db: db}
 }
 
+func generateAdminToken() (string, error) {
+	bytes := make([]byte, 16)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
 func (r *ProviderApplicationRepositoryPostgres) Create(ctx context.Context, app *domain.ProviderApplication) error {
+	token, err := generateAdminToken()
+	if err != nil {
+		return err
+	}
+	app.AdminToken = token
+
 	return r.db.QueryRowContext(ctx, queries.CreateProviderApplication,
 		app.UserID,
 		app.Phone,
@@ -26,6 +42,7 @@ func (r *ProviderApplicationRepositoryPostgres) Create(ctx context.Context, app 
 		app.YearsExperience,
 		app.Bio,
 		domain.ApplicationStatusPending,
+		token,
 	).Scan(&app.ID, &app.CreatedAt, &app.UpdatedAt)
 }
 
@@ -43,6 +60,7 @@ func (r *ProviderApplicationRepositoryPostgres) GetByID(ctx context.Context, id 
 		&app.Bio,
 		&app.Status,
 		&app.AdminNote,
+		&app.AdminToken,
 		&app.CreatedAt,
 		&app.UpdatedAt,
 		&app.UserName,
@@ -71,6 +89,36 @@ func (r *ProviderApplicationRepositoryPostgres) GetByUserID(ctx context.Context,
 		&app.Bio,
 		&app.Status,
 		&app.AdminNote,
+		&app.AdminToken,
+		&app.CreatedAt,
+		&app.UpdatedAt,
+		&app.UserName,
+		&app.UserEmail,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return app, nil
+}
+
+func (r *ProviderApplicationRepositoryPostgres) GetByToken(ctx context.Context, token string) (*domain.ProviderApplication, error) {
+	app := &domain.ProviderApplication{}
+	err := r.db.QueryRowContext(ctx, queries.GetProviderApplicationByToken, token).Scan(
+		&app.ID,
+		&app.UserID,
+		&app.Phone,
+		&app.ProviderType,
+		&app.InstagramURL,
+		&app.TelegramURL,
+		&app.FacebookURL,
+		&app.YearsExperience,
+		&app.Bio,
+		&app.Status,
+		&app.AdminNote,
+		&app.AdminToken,
 		&app.CreatedAt,
 		&app.UpdatedAt,
 		&app.UserName,
@@ -107,6 +155,7 @@ func (r *ProviderApplicationRepositoryPostgres) GetAll(ctx context.Context) ([]*
 			&app.Bio,
 			&app.Status,
 			&app.AdminNote,
+			&app.AdminToken,
 			&app.CreatedAt,
 			&app.UpdatedAt,
 			&app.UserName,
@@ -142,6 +191,7 @@ func (r *ProviderApplicationRepositoryPostgres) GetPending(ctx context.Context) 
 			&app.Bio,
 			&app.Status,
 			&app.AdminNote,
+			&app.AdminToken,
 			&app.CreatedAt,
 			&app.UpdatedAt,
 			&app.UserName,

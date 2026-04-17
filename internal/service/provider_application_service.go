@@ -93,6 +93,38 @@ func (s *ProviderApplicationService) GetByUserID(ctx context.Context, userID int
 	return s.appRepo.GetByUserID(ctx, userID)
 }
 
+func (s *ProviderApplicationService) GetByToken(ctx context.Context, token string) (*domain.ProviderApplication, error) {
+	return s.appRepo.GetByToken(ctx, token)
+}
+
+func (s *ProviderApplicationService) AcceptByToken(ctx context.Context, token string) (*domain.ProviderApplication, error) {
+	app, err := s.appRepo.GetByToken(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	if app == nil {
+		return nil, errors.New("invalid token")
+	}
+	if app.Status != domain.ApplicationStatusPending {
+		return nil, errors.New("application is not pending")
+	}
+	return s.Accept(ctx, app.ID, "")
+}
+
+func (s *ProviderApplicationService) RejectByToken(ctx context.Context, token string) (*domain.ProviderApplication, error) {
+	app, err := s.appRepo.GetByToken(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	if app == nil {
+		return nil, errors.New("invalid token")
+	}
+	if app.Status != domain.ApplicationStatusPending {
+		return nil, errors.New("application is not pending")
+	}
+	return s.Reject(ctx, app.ID, "")
+}
+
 func (s *ProviderApplicationService) GetAll(ctx context.Context) ([]*domain.ProviderApplication, error) {
 	return s.appRepo.GetAll(ctx)
 }

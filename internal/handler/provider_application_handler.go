@@ -114,3 +114,39 @@ func (h *ProviderApplicationHandler) Reject(w http.ResponseWriter, r *http.Reque
 	}
 	respondJSON(w, http.StatusOK, app)
 }
+
+func (h *ProviderApplicationHandler) AcceptByToken(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+
+	if token == "" {
+		http.Redirect(w, r, "/admin/provider-applications?result=error&message=invalid+token", http.StatusFound)
+		return
+	}
+
+	app, err := h.service.AcceptByToken(r.Context(), token)
+	if err != nil {
+		http.Redirect(w, r, "/admin/provider-applications?result=error&message="+err.Error(), http.StatusFound)
+		return
+	}
+
+	http.Redirect(w, r, "/admin/provider-applications?result=accepted", http.StatusFound)
+	_ = app
+}
+
+func (h *ProviderApplicationHandler) RejectByToken(w http.ResponseWriter, r *http.Request) {
+	token := r.URL.Query().Get("token")
+
+	if token == "" {
+		http.Redirect(w, r, "/admin/provider-applications?result=error&message=invalid+token", http.StatusFound)
+		return
+	}
+
+	app, err := h.service.RejectByToken(r.Context(), token)
+	if err != nil {
+		http.Redirect(w, r, "/admin/provider-applications?result=error&message="+err.Error(), http.StatusFound)
+		return
+	}
+
+	http.Redirect(w, r, "/admin/provider-applications?result=rejected", http.StatusFound)
+	_ = app
+}

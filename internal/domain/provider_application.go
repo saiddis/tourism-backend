@@ -24,6 +24,7 @@ type ProviderApplication struct {
 	Bio             *string           `json:"bio,omitempty"`
 	Status          ApplicationStatus `json:"status"`
 	AdminNote       *string           `json:"admin_note,omitempty"`
+	AdminToken      string            `json:"admin_token,omitempty"`
 	CreatedAt       time.Time         `json:"created_at"`
 	UpdatedAt       time.Time         `json:"updated_at"`
 }
