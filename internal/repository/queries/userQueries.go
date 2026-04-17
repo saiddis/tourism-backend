@@ -26,4 +26,6 @@ UPDATE users SET avatar_url = $1 WHERE id = $2`
 UPDATE users SET balance = $1 WHERE id = $2`
 	DeductUserBalance = `
 UPDATE users SET balance = balance - $1 WHERE id = $2 AND balance >= $1`
+	UpdateUserRole = `
+UPDATE users SET role = $1 WHERE id = $2`
 )

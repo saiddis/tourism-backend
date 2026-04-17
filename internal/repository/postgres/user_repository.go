@@ -119,3 +119,8 @@ func (r *UserRepositoryPostgres) DeductBalance(ctx context.Context, id int, amou
 	}
 	return nil
 }
+
+func (r *UserRepositoryPostgres) UpdateRole(ctx context.Context, id int, role domain.UserRole) error {
+	_, err := r.db.ExecContext(ctx, queries.UpdateUserRole, role, id)
+	return err
+}

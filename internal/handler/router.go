@@ -14,6 +14,8 @@ func NewRouter(
 	paymentHandler *PaymentHandler,
 	reviewHandler *ReviewHandler,
 	destinationHandler *DestinationHandler,
+	providerHandler *ProviderHandler,
+	providerAppHandler *ProviderApplicationHandler,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
@@ -32,6 +34,9 @@ func NewRouter(
 	r.Get("/reviews/tour/{id}", reviewHandler.GetByTourID)
 	r.Get("/destinations", destinationHandler.GetAll)
 	r.Get("/destinations/{id}", destinationHandler.GetByID)
+	r.Get("/providers/active", providerHandler.GetActive)
+	r.Get("/providers/user/{userId}", providerHandler.GetByUserID)
+	r.Get("/providers/{id}", providerHandler.GetByID)
 
 	// 🔐 Защищённые endpoints
 	r.Group(func(r chi.Router) {
@@ -48,6 +53,10 @@ func NewRouter(
 		r.Put("/bookings/{id}/status", bookingHandler.UpdateStatus)
 		r.Post("/reviews", reviewHandler.Create)
 		r.Post("/payments", paymentHandler.Create)
+		r.Post("/provider-applications", providerAppHandler.Submit)
+		r.Get("/provider-applications/me", providerAppHandler.GetByUserID)
+		r.Get("/providers/me", providerHandler.GetByUserID)
+		r.Put("/providers/{id}", providerHandler.Update)
 
 		// Только manager и admin
 		r.Group(func(r chi.Router) {
@@ -69,6 +78,12 @@ func NewRouter(
 			r.Use(middleware.RoleMiddleware("admin"))
 			r.Get("/users", userHandler.GetAll)
 			r.Get("/users/{id}", userHandler.GetByID)
+			r.Post("/providers", providerHandler.Create)
+			r.Get("/providers", providerHandler.GetAll)
+			r.Put("/providers/{id}/active", providerHandler.ToggleActive)
+			r.Get("/provider-applications", providerAppHandler.GetAll)
+			r.Put("/provider-applications/{id}/accept", providerAppHandler.Accept)
+			r.Put("/provider-applications/{id}/reject", providerAppHandler.Reject)
 		})
 	})
 

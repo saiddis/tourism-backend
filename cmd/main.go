@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"tourism-backend/config"
+	"tourism-backend/internal/email"
 	"tourism-backend/internal/handler"
 	middleware "tourism-backend/internal/middlewares"
 	"tourism-backend/internal/repository/postgres"
@@ -36,6 +37,8 @@ func main() {
 	paymentRepo := postgres.NewPaymentRepository(db)
 	reviewRepo := postgres.NewReviewRepository(db)
 	destinationRepo := postgres.NewDestinationRepository(db)
+	providerRepo := postgres.NewProviderRepository(db)
+	providerAppRepo := postgres.NewProviderApplicationRepository(db)
 
 	// 4. Service
 	userService := service.NewUserService(userRepo)
@@ -44,6 +47,9 @@ func main() {
 	paymentService := service.NewPaymentService(paymentRepo)
 	reviewService := service.NewReviewService(reviewRepo)
 	destinationService := service.NewDestinationService(destinationRepo)
+	emailService := email.NewEmailService()
+	providerService := service.NewProviderService(providerRepo, userRepo)
+	providerAppService := service.NewProviderApplicationService(providerAppRepo, providerRepo, userRepo, emailService)
 
 	// 5. Handler
 	userHandler := handler.NewUserHandler(userService, cfg.CookieDomain)
@@ -52,6 +58,8 @@ func main() {
 	paymentHandler := handler.NewPaymentHandler(paymentService, bookingService)
 	reviewHandler := handler.NewReviewHandler(reviewService)
 	destinationHandler := handler.NewDestinationHandler(destinationService)
+	providerHandler := handler.NewProviderHandler(providerService)
+	providerAppHandler := handler.NewProviderApplicationHandler(providerAppService)
 
 	// 6. Router
 	router := handler.NewRouter(
@@ -61,6 +69,8 @@ func main() {
 		paymentHandler,
 		reviewHandler,
 		destinationHandler,
+		providerHandler,
+		providerAppHandler,
 	)
 
 	// Serve static files for uploads

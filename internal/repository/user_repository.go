@@ -16,4 +16,5 @@ type UserRepository interface {
 	UpdateAvatarURL(ctx context.Context, id int, url string) error
 	UpdateBalance(ctx context.Context, id int, balance float64) error
 	DeductBalance(ctx context.Context, id int, amount float64) error
+	UpdateRole(ctx context.Context, id int, role domain.UserRole) error
 }
