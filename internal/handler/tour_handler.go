@@ -24,7 +24,7 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	result, err := h.service.Create(&tour)
+	result, err := h.service.Create(r.Context(), &tour)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -33,7 +33,7 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *TourHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	tours, err := h.service.GetAll()
+	tours, err := h.service.GetAll(r.Context())
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -47,7 +47,7 @@ func (h *TourHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	tour, err := h.service.GetByID(id)
+	tour, err := h.service.GetByID(r.Context(), id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -67,7 +67,7 @@ func (h *TourHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tour.ID = id
-	result, err := h.service.Update(&tour)
+	result, err := h.service.Update(r.Context(), &tour)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -81,7 +81,7 @@ func (h *TourHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	if err := h.service.Delete(id); err != nil {
+	if err := h.service.Delete(r.Context(), id); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -93,7 +93,7 @@ func (h *TourHandler) GetByDestinationID(w http.ResponseWriter, r *http.Request)
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	tours, err := h.service.GetByDestinationID(id)
+	tours, err := h.service.GetByDestinationID(r.Context(), id)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return

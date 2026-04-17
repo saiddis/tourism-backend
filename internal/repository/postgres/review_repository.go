@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository/queries"
@@ -14,8 +15,8 @@ func NewReviewRepository(db *sql.DB) *ReviewRepositoryPostgres {
 	return &ReviewRepositoryPostgres{db: db}
 }
 
-func (r *ReviewRepositoryPostgres) Create(review *domain.Review) error {
-	return r.db.QueryRow(queries.CreateReview,
+func (r *ReviewRepositoryPostgres) Create(ctx context.Context, review *domain.Review) error {
+	return r.db.QueryRowContext(ctx, queries.CreateReview,
 		review.UserID,
 		review.TourID,
 		review.Rating,
@@ -23,9 +24,9 @@ func (r *ReviewRepositoryPostgres) Create(review *domain.Review) error {
 	).Scan(&review.ID, &review.CreatedAt)
 }
 
-func (r *ReviewRepositoryPostgres) GetByTourID(tourID int) ([]*domain.Review, error) {
+func (r *ReviewRepositoryPostgres) GetByTourID(ctx context.Context, tourID int) ([]*domain.Review, error) {
 	reviews := make([]*domain.Review, 0)
-	rows, err := r.db.Query(queries.GetReviewsByTourID, tourID)
+	rows, err := r.db.QueryContext(ctx, queries.GetReviewsByTourID, tourID)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +49,9 @@ func (r *ReviewRepositoryPostgres) GetByTourID(tourID int) ([]*domain.Review, er
 	return reviews, nil
 }
 
-func (r *ReviewRepositoryPostgres) GetByUserID(userID int) ([]*domain.Review, error) {
+func (r *ReviewRepositoryPostgres) GetByUserID(ctx context.Context, userID int) ([]*domain.Review, error) {
 	reviews := make([]*domain.Review, 0)
-	rows, err := r.db.Query(queries.GetReviewsByUserID, userID)
+	rows, err := r.db.QueryContext(ctx, queries.GetReviewsByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (r *ReviewRepositoryPostgres) GetByUserID(userID int) ([]*domain.Review, er
 	return reviews, nil
 }
 
-func (r *ReviewRepositoryPostgres) Delete(id int) error {
-	_, err := r.db.Exec(queries.DeleteReview, id)
+func (r *ReviewRepositoryPostgres) Delete(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, queries.DeleteReview, id)
 	return err
 }

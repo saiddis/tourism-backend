@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"strings"
 	"tourism-backend/internal/domain"
@@ -17,8 +18,8 @@ func NewUserService(repo repository.UserRepository) *UserService {
 	return &UserService{repo: repo}
 }
 
-func (s *UserService) Register(name, email, password string) (*domain.User, error) {
-	exist, err := s.repo.GetByEmail(email)
+func (s *UserService) Register(ctx context.Context, name, email, password string) (*domain.User, error) {
+	exist, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -38,14 +39,14 @@ func (s *UserService) Register(name, email, password string) (*domain.User, erro
 		Role:         domain.RoleClient,
 	}
 
-	if err := s.repo.Create(user); err != nil {
+	if err := s.repo.Create(ctx, user); err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (s *UserService) Login(email, password string) (*domain.User, error) {
-	user, err := s.repo.GetByEmail(email)
+func (s *UserService) Login(ctx context.Context, email, password string) (*domain.User, error) {
+	user, err := s.repo.GetByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (s *UserService) Login(email, password string) (*domain.User, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err := s.repo.UpdatePasswordHash(user.ID, hashedPassword); err != nil {
+		if err := s.repo.UpdatePasswordHash(ctx, user.ID, hashedPassword); err != nil {
 			return nil, err
 		}
 		user.PasswordHash = hashedPassword
@@ -75,8 +76,8 @@ func (s *UserService) Login(email, password string) (*domain.User, error) {
 	return user, nil
 }
 
-func (s *UserService) GetByID(id int) (*domain.User, error) {
-	user, err := s.repo.GetByID(id)
+func (s *UserService) GetByID(ctx context.Context, id int) (*domain.User, error) {
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -86,16 +87,16 @@ func (s *UserService) GetByID(id int) (*domain.User, error) {
 	return user, nil
 }
 
-func (s *UserService) GetAll() ([]*domain.User, error) {
-	users, err := s.repo.GetAll()
+func (s *UserService) GetAll(ctx context.Context) ([]*domain.User, error) {
+	users, err := s.repo.GetAll(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return users, nil
 }
 
-func (s *UserService) Update(id int, name, email string) (*domain.User, error) {
-	user, err := s.repo.GetByID(id)
+func (s *UserService) Update(ctx context.Context, id int, name, email string) (*domain.User, error) {
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -106,22 +107,22 @@ func (s *UserService) Update(id int, name, email string) (*domain.User, error) {
 	user.Name = name
 	user.Email = email
 
-	if err := s.repo.Update(user); err != nil {
+	if err := s.repo.Update(ctx, user); err != nil {
 		return nil, err
 	}
 	return user, nil
 }
 
-func (s *UserService) UpdateAvatarURL(id int, url string) error {
-	return s.repo.UpdateAvatarURL(id, url)
+func (s *UserService) UpdateAvatarURL(ctx context.Context, id int, url string) error {
+	return s.repo.UpdateAvatarURL(ctx, id, url)
 }
 
-func (s *UserService) Deposit(id int, amount float64) (*domain.User, error) {
+func (s *UserService) Deposit(ctx context.Context, id int, amount float64) (*domain.User, error) {
 	if amount <= 0 {
 		return nil, errors.New("amount must be positive")
 	}
 
-	user, err := s.repo.GetByID(id)
+	user, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +131,7 @@ func (s *UserService) Deposit(id int, amount float64) (*domain.User, error) {
 	}
 
 	newBalance := user.Balance + amount
-	if err := s.repo.UpdateBalance(id, newBalance); err != nil {
+	if err := s.repo.UpdateBalance(ctx, id, newBalance); err != nil {
 		return nil, err
 	}
 
@@ -138,19 +139,19 @@ func (s *UserService) Deposit(id int, amount float64) (*domain.User, error) {
 	return user, nil
 }
 
-func (s *UserService) DeductBalance(userID int, amount float64) error {
+func (s *UserService) DeductBalance(ctx context.Context, userID int, amount float64) error {
 	if amount <= 0 {
 		return errors.New("amount must be positive")
 	}
-	return s.repo.DeductBalance(userID, amount)
+	return s.repo.DeductBalance(ctx, userID, amount)
 }
 
-func (s *UserService) RefundBalance(userID int, amount float64) (*domain.User, error) {
+func (s *UserService) RefundBalance(ctx context.Context, userID int, amount float64) (*domain.User, error) {
 	if amount <= 0 {
 		return nil, errors.New("amount must be positive")
 	}
 
-	user, err := s.repo.GetByID(userID)
+	user, err := s.repo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +160,7 @@ func (s *UserService) RefundBalance(userID int, amount float64) (*domain.User, e
 	}
 
 	newBalance := user.Balance + amount
-	if err := s.repo.UpdateBalance(userID, newBalance); err != nil {
+	if err := s.repo.UpdateBalance(ctx, userID, newBalance); err != nil {
 		return nil, err
 	}
 

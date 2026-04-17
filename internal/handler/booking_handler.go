@@ -33,6 +33,7 @@ func NewBookingHandler(
 }
 
 func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var req struct {
 		TourID int `json:"tour_id"`
 	}
@@ -48,7 +49,7 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 1. Get tour
-	tour, err := h.tourService.GetByID(req.TourID)
+	tour, err := h.tourService.GetByID(ctx, req.TourID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "tour not found")
 		return
@@ -61,7 +62,7 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. Check for existing active booking
-	existingBookings, err := h.service.GetByUserID(claims.UserID)
+	existingBookings, err := h.service.GetByUserID(ctx, claims.UserID)
 	if err == nil {
 		for _, b := range existingBookings {
 			if b.TourID == req.TourID && b.Status != domain.BookingStatusCancelled {
@@ -72,7 +73,7 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. Deduct balance
-	err = h.userService.DeductBalance(claims.UserID, tour.Price)
+	err = h.userService.DeductBalance(ctx, claims.UserID, tour.Price)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "insufficient balance")
 		return
@@ -95,10 +96,10 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Status:                 domain.BookingStatusConfirmed,
 	}
 
-	booking, err = h.service.Create(booking)
+	booking, err = h.service.Create(ctx, booking)
 	if err != nil {
 		// Rollback: refund the user
-		h.userService.RefundBalance(claims.UserID, tour.Price)
+		h.userService.RefundBalance(ctx, claims.UserID, tour.Price)
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -109,21 +110,18 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		Amount:    tour.Price,
 		Currency:  "TJS",
 	}
-	if _, err := h.paymentService.Create(payment, domain.PaymentStatusPaid); err != nil {
+	if _, err := h.paymentService.Create(ctx, payment, domain.PaymentStatusPaid); err != nil {
 		// Non-critical: payment record failed but booking succeeded
-		// In production, you'd want to handle this more carefully
 	}
 
 	// 7. Decrement tour capacity
-	if err := h.tourService.DecrementCapacity(tour.ID); err != nil {
-		// Non-critical: booking succeeded
-	}
+	h.tourService.DecrementCapacity(ctx, tour.ID)
 
 	respondJSON(w, http.StatusCreated, booking)
 }
 
 func (h *BookingHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	bookings, err := h.service.GetAll()
+	bookings, err := h.service.GetAll(r.Context())
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -148,7 +146,7 @@ func (h *BookingHandler) GetByUserID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bookings, err := h.service.GetByUserID(id)
+	bookings, err := h.service.GetByUserID(r.Context(), id)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -157,6 +155,7 @@ func (h *BookingHandler) GetByUserID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *BookingHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "invalid id")
@@ -177,7 +176,7 @@ func (h *BookingHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get booking to check ownership and get tour info
-	booking, err := h.service.GetByID(id)
+	booking, err := h.service.GetByID(ctx, id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, "booking not found")
 		return
@@ -197,16 +196,15 @@ func (h *BookingHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 
 	// If cancelling a confirmed booking, refund the user
 	if req.Status == domain.BookingStatusCancelled && booking.Status == domain.BookingStatusConfirmed {
-		_, err := h.userService.RefundBalance(booking.UserID, booking.TourPrice)
+		_, err := h.userService.RefundBalance(ctx, booking.UserID, booking.TourPrice)
 		if err != nil {
 			respondError(w, http.StatusInternalServerError, "failed to process refund")
 			return
 		}
-		// Increment tour capacity
-		h.tourService.IncrementCapacity(booking.TourID)
+		h.tourService.IncrementCapacity(ctx, booking.TourID)
 	}
 
-	if err := h.service.UpdateStatus(id, req.Status); err != nil {
+	if err := h.service.UpdateStatus(ctx, id, req.Status); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -219,7 +217,7 @@ func (h *BookingHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	if err := h.service.Delete(id); err != nil {
+	if err := h.service.Delete(r.Context(), id); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

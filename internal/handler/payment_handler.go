@@ -24,6 +24,7 @@ func NewPaymentHandler(service *service.PaymentService, bookingService *service.
 }
 
 func (h *PaymentHandler) Create(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	var payment domain.Payment
 	if err := json.NewDecoder(r.Body).Decode(&payment); err != nil {
 		respondError(w, http.StatusBadRequest, "invalid request body")
@@ -36,7 +37,7 @@ func (h *PaymentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	booking, err := h.bookingService.GetByID(payment.BookingID)
+	booking, err := h.bookingService.GetByID(ctx, payment.BookingID)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -46,7 +47,7 @@ func (h *PaymentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.service.Create(&payment)
+	result, err := h.service.Create(ctx, &payment)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -60,7 +61,7 @@ func (h *PaymentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	payment, err := h.service.GetByID(id)
+	payment, err := h.service.GetByID(r.Context(), id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -81,7 +82,7 @@ func (h *PaymentHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if err := h.service.UpdateStatus(id, req.Status); err != nil {
+	if err := h.service.UpdateStatus(r.Context(), id, req.Status); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

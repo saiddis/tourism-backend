@@ -35,7 +35,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	user, err := h.service.Register(req.Name, req.Email, req.Password)
+	user, err := h.service.Register(r.Context(), req.Name, req.Email, req.Password)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -70,7 +70,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.Login(req.Email, req.Password)
+	user, err := h.service.Login(r.Context(), req.Email, req.Password)
 	if err != nil {
 		respondError(w, http.StatusUnauthorized, err.Error())
 		return
@@ -106,7 +106,7 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.GetByID(claims.UserID)
+	user, err := h.service.GetByID(r.Context(), claims.UserID)
 	if err != nil {
 		respondError(w, http.StatusUnauthorized, "invalid refresh token")
 		return
@@ -136,7 +136,11 @@ func (h *UserHandler) Logout(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) Me(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
-	user, err := h.service.GetByID(claims.UserID)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	user, err := h.service.GetByID(r.Context(), claims.UserID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -185,7 +189,7 @@ func clearRefreshTokenCookie(w http.ResponseWriter, domain string) {
 }
 
 func (h *UserHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	users, err := h.service.GetAll()
+	users, err := h.service.GetAll(r.Context())
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -201,7 +205,7 @@ func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.GetByID(id)
+	user, err := h.service.GetByID(r.Context(), id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -212,6 +216,10 @@ func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 
 	var req struct {
 		Name  string `json:"name"`
@@ -222,7 +230,7 @@ func (h *UserHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.Update(claims.UserID, req.Name, req.Email)
+	user, err := h.service.Update(r.Context(), claims.UserID, req.Name, req.Email)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -233,6 +241,10 @@ func (h *UserHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) SetAvatarURL(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 
 	var req struct {
 		AvatarURL string `json:"avatar_url"`
@@ -247,12 +259,12 @@ func (h *UserHandler) SetAvatarURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.UpdateAvatarURL(claims.UserID, req.AvatarURL); err != nil {
+	if err := h.service.UpdateAvatarURL(r.Context(), claims.UserID, req.AvatarURL); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	user, err := h.service.GetByID(claims.UserID)
+	user, err := h.service.GetByID(r.Context(), claims.UserID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -263,8 +275,12 @@ func (h *UserHandler) SetAvatarURL(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 
-	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB max
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		respondError(w, http.StatusBadRequest, "failed to parse form")
 		return
 	}
@@ -310,12 +326,12 @@ func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 
 	avatarURL := fmt.Sprintf("/uploads/avatars/%s", filename)
-	if err := h.service.UpdateAvatarURL(claims.UserID, avatarURL); err != nil {
+	if err := h.service.UpdateAvatarURL(r.Context(), claims.UserID, avatarURL); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	user, err := h.service.GetByID(claims.UserID)
+	user, err := h.service.GetByID(r.Context(), claims.UserID)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -326,6 +342,10 @@ func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 func (h *UserHandler) Deposit(w http.ResponseWriter, r *http.Request) {
 	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
 
 	var req struct {
 		Amount float64 `json:"amount"`
@@ -340,7 +360,7 @@ func (h *UserHandler) Deposit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.service.Deposit(claims.UserID, req.Amount)
+	user, err := h.service.Deposit(r.Context(), claims.UserID, req.Amount)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return

@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"tourism-backend/internal/domain"
@@ -15,22 +16,22 @@ func NewTourRepositoryPostgres(db *sql.DB) *TourRepositoryPostgres {
 	return &TourRepositoryPostgres{db: db}
 }
 
-func (r *TourRepositoryPostgres) Create(tour *domain.Tour) error {
-	return r.db.QueryRow(queries.CreateTour, tour.DestinationID, tour.Name, tour.Description, tour.Price, tour.StartDate, tour.EndDate, tour.Capacity).Scan(&tour.ID, &tour.CreatedAt)
+func (r *TourRepositoryPostgres) Create(ctx context.Context, tour *domain.Tour) error {
+	return r.db.QueryRowContext(ctx, queries.CreateTour, tour.DestinationID, tour.Name, tour.Description, tour.Price, tour.StartDate, tour.EndDate, tour.Capacity).Scan(&tour.ID, &tour.CreatedAt)
 }
 
-func (r *TourRepositoryPostgres) GetByID(id int) (*domain.Tour, error) {
+func (r *TourRepositoryPostgres) GetByID(ctx context.Context, id int) (*domain.Tour, error) {
 	var tour domain.Tour
-	err := scanTour(r.db.QueryRow(queries.GetTourByID, id), &tour)
+	err := scanTour(r.db.QueryRowContext(ctx, queries.GetTourByID, id), &tour)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	return &tour, err
 }
 
-func (r *TourRepositoryPostgres) GetAll() ([]*domain.Tour, error) {
+func (r *TourRepositoryPostgres) GetAll(ctx context.Context) ([]*domain.Tour, error) {
 	tours := make([]*domain.Tour, 0)
-	rows, err := r.db.Query(queries.GetAllTours)
+	rows, err := r.db.QueryContext(ctx, queries.GetAllTours)
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +47,9 @@ func (r *TourRepositoryPostgres) GetAll() ([]*domain.Tour, error) {
 	return tours, nil
 }
 
-func (r *TourRepositoryPostgres) GetByDestinationID(destinationID int) ([]*domain.Tour, error) {
+func (r *TourRepositoryPostgres) GetByDestinationID(ctx context.Context, destinationID int) ([]*domain.Tour, error) {
 	tours := make([]*domain.Tour, 0)
-	rows, err := r.db.Query(queries.GetToursByDestinationID, destinationID)
+	rows, err := r.db.QueryContext(ctx, queries.GetToursByDestinationID, destinationID)
 	if err != nil {
 		return nil, err
 	}
@@ -64,8 +65,8 @@ func (r *TourRepositoryPostgres) GetByDestinationID(destinationID int) ([]*domai
 	return tours, nil
 }
 
-func (r *TourRepositoryPostgres) Update(tour *domain.Tour) error {
-	return r.db.QueryRow(queries.UpdateTour,
+func (r *TourRepositoryPostgres) Update(ctx context.Context, tour *domain.Tour) error {
+	return r.db.QueryRowContext(ctx, queries.UpdateTour,
 		tour.DestinationID,
 		tour.Name,
 		tour.Description,
@@ -77,13 +78,13 @@ func (r *TourRepositoryPostgres) Update(tour *domain.Tour) error {
 	).Scan(&tour.CreatedAt)
 }
 
-func (r *TourRepositoryPostgres) Delete(id int) error {
-	_, err := r.db.Exec(queries.DeleteTour, id)
+func (r *TourRepositoryPostgres) Delete(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, queries.DeleteTour, id)
 	return err
 }
 
-func (r *TourRepositoryPostgres) DecrementCapacity(id int) error {
-	result, err := r.db.Exec(queries.DecrementTourCapacity, id)
+func (r *TourRepositoryPostgres) DecrementCapacity(ctx context.Context, id int) error {
+	result, err := r.db.ExecContext(ctx, queries.DecrementTourCapacity, id)
 	if err != nil {
 		return err
 	}
@@ -97,8 +98,8 @@ func (r *TourRepositoryPostgres) DecrementCapacity(id int) error {
 	return nil
 }
 
-func (r *TourRepositoryPostgres) IncrementCapacity(id int) error {
-	_, err := r.db.Exec(queries.IncrementTourCapacity, id)
+func (r *TourRepositoryPostgres) IncrementCapacity(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, queries.IncrementTourCapacity, id)
 	return err
 }
 

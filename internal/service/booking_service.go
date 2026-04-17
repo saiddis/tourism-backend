@@ -1,7 +1,7 @@
-// internal/service/booking_service.go
 package service
 
 import (
+	"context"
 	"errors"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository"
@@ -15,16 +15,18 @@ func NewBookingService(repo repository.BookingRepository) *BookingService {
 	return &BookingService{repo: repo}
 }
 
-func (s *BookingService) Create(booking *domain.Booking) (*domain.Booking, error) {
-	booking.Status = domain.BookingStatusPending
-	if err := s.repo.Create(booking); err != nil {
+func (s *BookingService) Create(ctx context.Context, booking *domain.Booking) (*domain.Booking, error) {
+	if booking.Status == "" {
+		booking.Status = domain.BookingStatusPending
+	}
+	if err := s.repo.Create(ctx, booking); err != nil {
 		return nil, err
 	}
 	return booking, nil
 }
 
-func (s *BookingService) GetByID(id int) (*domain.Booking, error) {
-	booking, err := s.repo.GetByID(id)
+func (s *BookingService) GetByID(ctx context.Context, id int) (*domain.Booking, error) {
+	booking, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -34,18 +36,18 @@ func (s *BookingService) GetByID(id int) (*domain.Booking, error) {
 	return booking, nil
 }
 
-func (s *BookingService) GetByUserID(userID int) ([]*domain.Booking, error) {
-	return s.repo.GetByUserID(userID)
+func (s *BookingService) GetByUserID(ctx context.Context, userID int) ([]*domain.Booking, error) {
+	return s.repo.GetByUserID(ctx, userID)
 }
 
-func (s *BookingService) GetAll() ([]*domain.Booking, error) {
-	return s.repo.GetAll()
+func (s *BookingService) GetAll(ctx context.Context) ([]*domain.Booking, error) {
+	return s.repo.GetAll(ctx)
 }
 
-func (s *BookingService) UpdateStatus(id int, status domain.BookingStatus) error {
-	return s.repo.UpdateStatus(id, status)
+func (s *BookingService) UpdateStatus(ctx context.Context, id int, status domain.BookingStatus) error {
+	return s.repo.UpdateStatus(ctx, id, status)
 }
 
-func (s *BookingService) Delete(id int) error {
-	return s.repo.Delete(id)
+func (s *BookingService) Delete(ctx context.Context, id int) error {
+	return s.repo.Delete(ctx, id)
 }

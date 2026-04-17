@@ -24,7 +24,7 @@ func (h *DestinationHandler) Create(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	result, err := h.service.Create(&destination)
+	result, err := h.service.Create(r.Context(), &destination)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -33,7 +33,7 @@ func (h *DestinationHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *DestinationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	destinations, err := h.service.GetAll()
+	destinations, err := h.service.GetAll(r.Context())
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -47,7 +47,7 @@ func (h *DestinationHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	destination, err := h.service.GetByID(id)
+	destination, err := h.service.GetByID(r.Context(), id)
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
@@ -61,7 +61,7 @@ func (h *DestinationHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	if err := h.service.Delete(id); err != nil {
+	if err := h.service.Delete(r.Context(), id); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

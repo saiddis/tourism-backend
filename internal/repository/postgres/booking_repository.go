@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository/queries"
@@ -14,26 +15,26 @@ func NewBookingRepository(db *sql.DB) *BookingRepositoryPostgres {
 	return &BookingRepositoryPostgres{db: db}
 }
 
-func (r *BookingRepositoryPostgres) Create(booking *domain.Booking) error {
-	return r.db.QueryRow(queries.CreateBooking,
+func (r *BookingRepositoryPostgres) Create(ctx context.Context, booking *domain.Booking) error {
+	return r.db.QueryRowContext(ctx, queries.CreateBooking,
 		booking.UserID,
 		booking.TourID,
 		booking.Status,
 	).Scan(&booking.ID, &booking.CreatedAt)
 }
 
-func (r *BookingRepositoryPostgres) GetByID(id int) (*domain.Booking, error) {
+func (r *BookingRepositoryPostgres) GetByID(ctx context.Context, id int) (*domain.Booking, error) {
 	var booking domain.Booking
-	err := scanBooking(r.db.QueryRow(queries.GetBookingByID, id), &booking)
+	err := scanBooking(r.db.QueryRowContext(ctx, queries.GetBookingByID, id), &booking)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	return &booking, err
 }
 
-func (r *BookingRepositoryPostgres) GetByUserID(userID int) ([]*domain.Booking, error) {
+func (r *BookingRepositoryPostgres) GetByUserID(ctx context.Context, userID int) ([]*domain.Booking, error) {
 	bookings := make([]*domain.Booking, 0)
-	rows, err := r.db.Query(queries.GetBookingsByUserID, userID)
+	rows, err := r.db.QueryContext(ctx, queries.GetBookingsByUserID, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +50,9 @@ func (r *BookingRepositoryPostgres) GetByUserID(userID int) ([]*domain.Booking, 
 	return bookings, nil
 }
 
-func (r *BookingRepositoryPostgres) GetAll() ([]*domain.Booking, error) {
+func (r *BookingRepositoryPostgres) GetAll(ctx context.Context) ([]*domain.Booking, error) {
 	bookings := make([]*domain.Booking, 0)
-	rows, err := r.db.Query(queries.GetAllBookings)
+	rows, err := r.db.QueryContext(ctx, queries.GetAllBookings)
 	if err != nil {
 		return nil, err
 	}
@@ -67,13 +68,13 @@ func (r *BookingRepositoryPostgres) GetAll() ([]*domain.Booking, error) {
 	return bookings, nil
 }
 
-func (r *BookingRepositoryPostgres) UpdateStatus(id int, status domain.BookingStatus) error {
-	_, err := r.db.Exec(queries.UpdateBookingStatus, status, id)
+func (r *BookingRepositoryPostgres) UpdateStatus(ctx context.Context, id int, status domain.BookingStatus) error {
+	_, err := r.db.ExecContext(ctx, queries.UpdateBookingStatus, status, id)
 	return err
 }
 
-func (r *BookingRepositoryPostgres) Delete(id int) error {
-	_, err := r.db.Exec(queries.DeleteBooking, id)
+func (r *BookingRepositoryPostgres) Delete(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, queries.DeleteBooking, id)
 	return err
 }
 

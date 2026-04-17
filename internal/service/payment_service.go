@@ -1,7 +1,7 @@
-// internal/service/payment_service.go
 package service
 
 import (
+	"context"
 	"errors"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository"
@@ -15,7 +15,7 @@ func NewPaymentService(repo repository.PaymentRepository) *PaymentService {
 	return &PaymentService{repo: repo}
 }
 
-func (s *PaymentService) Create(payment *domain.Payment, statusOverride ...domain.PaymentStatus) (*domain.Payment, error) {
+func (s *PaymentService) Create(ctx context.Context, payment *domain.Payment, statusOverride ...domain.PaymentStatus) (*domain.Payment, error) {
 	if len(statusOverride) > 0 {
 		payment.Status = statusOverride[0]
 	} else {
@@ -24,14 +24,14 @@ func (s *PaymentService) Create(payment *domain.Payment, statusOverride ...domai
 	if payment.Currency == "" {
 		payment.Currency = "TJS"
 	}
-	if err := s.repo.Create(payment); err != nil {
+	if err := s.repo.Create(ctx, payment); err != nil {
 		return nil, err
 	}
 	return payment, nil
 }
 
-func (s *PaymentService) GetByID(id int) (*domain.Payment, error) {
-	payment, err := s.repo.GetByID(id)
+func (s *PaymentService) GetByID(ctx context.Context, id int) (*domain.Payment, error) {
+	payment, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -41,10 +41,10 @@ func (s *PaymentService) GetByID(id int) (*domain.Payment, error) {
 	return payment, nil
 }
 
-func (s *PaymentService) GetByBookingID(bookingID int) (*domain.Payment, error) {
-	return s.repo.GetByBookingID(bookingID)
+func (s *PaymentService) GetByBookingID(ctx context.Context, bookingID int) (*domain.Payment, error) {
+	return s.repo.GetByBookingID(ctx, bookingID)
 }
 
-func (s *PaymentService) UpdateStatus(id int, status domain.PaymentStatus) error {
-	return s.repo.UpdateStatus(id, status)
+func (s *PaymentService) UpdateStatus(ctx context.Context, id int, status domain.PaymentStatus) error {
+	return s.repo.UpdateStatus(ctx, id, status)
 }

@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"tourism-backend/internal/domain"
@@ -15,13 +16,13 @@ func NewUserRepository(db *sql.DB) *UserRepositoryPostgres {
 	return &UserRepositoryPostgres{db: db}
 }
 
-func (r *UserRepositoryPostgres) Create(user *domain.User) error {
-	return r.db.QueryRow(queries.CreateUser, user.Name, user.Email, user.PasswordHash, user.Role).Scan(&user.ID, &user.CreatedAt)
+func (r *UserRepositoryPostgres) Create(ctx context.Context, user *domain.User) error {
+	return r.db.QueryRowContext(ctx, queries.CreateUser, user.Name, user.Email, user.PasswordHash, user.Role).Scan(&user.ID, &user.CreatedAt)
 }
 
-func (r *UserRepositoryPostgres) GetByEmail(email string) (*domain.User, error) {
+func (r *UserRepositoryPostgres) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	user := &domain.User{}
-	err := r.db.QueryRow(queries.GetUserByEmail, email).Scan(
+	err := r.db.QueryRowContext(ctx, queries.GetUserByEmail, email).Scan(
 		&user.ID,
 		&user.Name,
 		&user.Email,
@@ -37,8 +38,8 @@ func (r *UserRepositoryPostgres) GetByEmail(email string) (*domain.User, error) 
 	return user, err
 }
 
-func (r *UserRepositoryPostgres) GetAll() ([]*domain.User, error) {
-	rows, err := r.db.Query(queries.GetAllUsers)
+func (r *UserRepositoryPostgres) GetAll(ctx context.Context) ([]*domain.User, error) {
+	rows, err := r.db.QueryContext(ctx, queries.GetAllUsers)
 	if err != nil {
 		return nil, err
 	}
@@ -62,24 +63,24 @@ func (r *UserRepositoryPostgres) GetAll() ([]*domain.User, error) {
 	return users, nil
 }
 
-func (r *UserRepositoryPostgres) Update(user *domain.User) error {
-	_, err := r.db.Exec(queries.UpdateUser, user.Name, user.Email, user.ID)
+func (r *UserRepositoryPostgres) Update(ctx context.Context, user *domain.User) error {
+	_, err := r.db.ExecContext(ctx, queries.UpdateUser, user.Name, user.Email, user.ID)
 	return err
 }
 
-func (r *UserRepositoryPostgres) UpdatePasswordHash(id int, passwordHash string) error {
-	_, err := r.db.Exec(queries.UpdateUserPassword, passwordHash, id)
+func (r *UserRepositoryPostgres) UpdatePasswordHash(ctx context.Context, id int, passwordHash string) error {
+	_, err := r.db.ExecContext(ctx, queries.UpdateUserPassword, passwordHash, id)
 	return err
 }
 
-func (r *UserRepositoryPostgres) Delete(id int) error {
-	_, err := r.db.Exec(queries.DeleteUser, id)
+func (r *UserRepositoryPostgres) Delete(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, queries.DeleteUser, id)
 	return err
 }
 
-func (r *UserRepositoryPostgres) GetByID(id int) (*domain.User, error) {
+func (r *UserRepositoryPostgres) GetByID(ctx context.Context, id int) (*domain.User, error) {
 	user := &domain.User{}
-	err := r.db.QueryRow(queries.GetUserByID, id).Scan(
+	err := r.db.QueryRowContext(ctx, queries.GetUserByID, id).Scan(
 		&user.ID,
 		&user.Name,
 		&user.Email,
@@ -94,18 +95,18 @@ func (r *UserRepositoryPostgres) GetByID(id int) (*domain.User, error) {
 	return user, err
 }
 
-func (r *UserRepositoryPostgres) UpdateAvatarURL(id int, url string) error {
-	_, err := r.db.Exec(queries.UpdateUserAvatarURL, url, id)
+func (r *UserRepositoryPostgres) UpdateAvatarURL(ctx context.Context, id int, url string) error {
+	_, err := r.db.ExecContext(ctx, queries.UpdateUserAvatarURL, url, id)
 	return err
 }
 
-func (r *UserRepositoryPostgres) UpdateBalance(id int, balance float64) error {
-	_, err := r.db.Exec(queries.UpdateUserBalance, balance, id)
+func (r *UserRepositoryPostgres) UpdateBalance(ctx context.Context, id int, balance float64) error {
+	_, err := r.db.ExecContext(ctx, queries.UpdateUserBalance, balance, id)
 	return err
 }
 
-func (r *UserRepositoryPostgres) DeductBalance(id int, amount float64) error {
-	result, err := r.db.Exec(queries.DeductUserBalance, amount, id)
+func (r *UserRepositoryPostgres) DeductBalance(ctx context.Context, id int, amount float64) error {
+	result, err := r.db.ExecContext(ctx, queries.DeductUserBalance, amount, id)
 	if err != nil {
 		return err
 	}

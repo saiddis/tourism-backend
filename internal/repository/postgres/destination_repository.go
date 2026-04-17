@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository/queries"
@@ -14,26 +15,26 @@ func NewDestinationRepository(db *sql.DB) *DestinationRepositoryPostgres {
 	return &DestinationRepositoryPostgres{db: db}
 }
 
-func (r *DestinationRepositoryPostgres) Create(destination *domain.Destination) error {
-	return r.db.QueryRow(queries.CreateDestination,
+func (r *DestinationRepositoryPostgres) Create(ctx context.Context, destination *domain.Destination) error {
+	return r.db.QueryRowContext(ctx, queries.CreateDestination,
 		destination.Name,
 		destination.Description,
 		destination.ImageURL,
 	).Scan(&destination.ID, &destination.ImageURL, &destination.CreatedAt)
 }
 
-func (r *DestinationRepositoryPostgres) GetByID(id int) (*domain.Destination, error) {
+func (r *DestinationRepositoryPostgres) GetByID(ctx context.Context, id int) (*domain.Destination, error) {
 	var destination domain.Destination
-	err := scanDestination(r.db.QueryRow(queries.GetDestinationByID, id), &destination)
+	err := scanDestination(r.db.QueryRowContext(ctx, queries.GetDestinationByID, id), &destination)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	return &destination, err
 }
 
-func (r *DestinationRepositoryPostgres) GetAll() ([]*domain.Destination, error) {
+func (r *DestinationRepositoryPostgres) GetAll(ctx context.Context) ([]*domain.Destination, error) {
 	destinations := make([]*domain.Destination, 0)
-	rows, err := r.db.Query(queries.GetAllDestinations)
+	rows, err := r.db.QueryContext(ctx, queries.GetAllDestinations)
 	if err != nil {
 		return nil, err
 	}
@@ -49,8 +50,8 @@ func (r *DestinationRepositoryPostgres) GetAll() ([]*domain.Destination, error) 
 	return destinations, nil
 }
 
-func (r *DestinationRepositoryPostgres) Delete(id int) error {
-	_, err := r.db.Exec(queries.DeleteDestination, id)
+func (r *DestinationRepositoryPostgres) Delete(ctx context.Context, id int) error {
+	_, err := r.db.ExecContext(ctx, queries.DeleteDestination, id)
 	return err
 }
 

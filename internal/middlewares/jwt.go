@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	appcontext "tourism-backend/internal/context"
 )
 
 var (
@@ -60,10 +60,6 @@ type TokenPair struct {
 	AccessExpiresIn  int64  `json:"access_expires_in"`
 	RefreshExpiresIn int64  `json:"refresh_expires_in"`
 }
-
-type contextKey string
-
-const claimsKey contextKey = "claims"
 
 func GenerateToken(userID int, email, role string) (string, error) {
 	return GenerateAccessToken(userID, email, role)
@@ -183,13 +179,19 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), claimsKey, claims)
+
+		appClaims := &appcontext.Claims{
+			UserID: claims.UserID,
+			Email:  claims.Email,
+			Role:   claims.Role,
+		}
+		ctx := appcontext.WithClaims(r.Context(), appClaims)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func GetClaims(r *http.Request) *AccessToken {
-	claims, _ := r.Context().Value(claimsKey).(*AccessToken)
+func GetClaims(r *http.Request) *appcontext.Claims {
+	claims, _ := appcontext.GetClaims(r.Context())
 	return claims
 }
 

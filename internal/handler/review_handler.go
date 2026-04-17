@@ -33,7 +33,7 @@ func (h *ReviewHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	review.UserID = claims.UserID
-	result, err := h.service.Create(&review)
+	result, err := h.service.Create(r.Context(), &review)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -47,7 +47,7 @@ func (h *ReviewHandler) GetByTourID(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	reviews, err := h.service.GetByTourID(id)
+	reviews, err := h.service.GetByTourID(r.Context(), id)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -61,7 +61,7 @@ func (h *ReviewHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
-	if err := h.service.Delete(id); err != nil {
+	if err := h.service.Delete(r.Context(), id); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

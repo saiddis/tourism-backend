@@ -1,7 +1,7 @@
-// internal/service/destination_service.go
 package service
 
 import (
+	"context"
 	"errors"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository"
@@ -15,15 +15,15 @@ func NewDestinationService(repo repository.DestinationRepository) *DestinationSe
 	return &DestinationService{repo: repo}
 }
 
-func (s *DestinationService) Create(destination *domain.Destination) (*domain.Destination, error) {
-	if err := s.repo.Create(destination); err != nil {
+func (s *DestinationService) Create(ctx context.Context, destination *domain.Destination) (*domain.Destination, error) {
+	if err := s.repo.Create(ctx, destination); err != nil {
 		return nil, err
 	}
 	return destination, nil
 }
 
-func (s *DestinationService) GetByID(id int) (*domain.Destination, error) {
-	destination, err := s.repo.GetByID(id)
+func (s *DestinationService) GetByID(ctx context.Context, id int) (*domain.Destination, error) {
+	destination, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -33,10 +33,10 @@ func (s *DestinationService) GetByID(id int) (*domain.Destination, error) {
 	return destination, nil
 }
 
-func (s *DestinationService) GetAll() ([]*domain.Destination, error) {
-	return s.repo.GetAll()
+func (s *DestinationService) GetAll(ctx context.Context) ([]*domain.Destination, error) {
+	return s.repo.GetAll(ctx)
 }
 
-func (s *DestinationService) Delete(id int) error {
-	return s.repo.Delete(id)
+func (s *DestinationService) Delete(ctx context.Context, id int) error {
+	return s.repo.Delete(ctx, id)
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository"
@@ -14,15 +15,15 @@ func NewTourService(repo repository.TourRepository) *TourService {
 	return &TourService{repo: repo}
 }
 
-func (s *TourService) Create(tour *domain.Tour) (*domain.Tour, error) {
-	if err := s.repo.Create(tour); err != nil {
+func (s *TourService) Create(ctx context.Context, tour *domain.Tour) (*domain.Tour, error) {
+	if err := s.repo.Create(ctx, tour); err != nil {
 		return nil, err
 	}
 	return tour, nil
 }
 
-func (s *TourService) GetByID(id int) (*domain.Tour, error) {
-	tour, err := s.repo.GetByID(id)
+func (s *TourService) GetByID(ctx context.Context, id int) (*domain.Tour, error) {
+	tour, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -32,29 +33,29 @@ func (s *TourService) GetByID(id int) (*domain.Tour, error) {
 	return tour, nil
 }
 
-func (s *TourService) GetAll() ([]*domain.Tour, error) {
-	return s.repo.GetAll()
+func (s *TourService) GetAll(ctx context.Context) ([]*domain.Tour, error) {
+	return s.repo.GetAll(ctx)
 }
 
-func (s *TourService) GetByDestinationID(destinationID int) ([]*domain.Tour, error) {
-	return s.repo.GetByDestinationID(destinationID)
+func (s *TourService) GetByDestinationID(ctx context.Context, destinationID int) ([]*domain.Tour, error) {
+	return s.repo.GetByDestinationID(ctx, destinationID)
 }
 
-func (s *TourService) Update(tour *domain.Tour) (*domain.Tour, error) {
-	if err := s.repo.Update(tour); err != nil {
+func (s *TourService) Update(ctx context.Context, tour *domain.Tour) (*domain.Tour, error) {
+	if err := s.repo.Update(ctx, tour); err != nil {
 		return nil, err
 	}
 	return tour, nil
 }
 
-func (s *TourService) Delete(id int) error {
-	return s.repo.Delete(id)
+func (s *TourService) Delete(ctx context.Context, id int) error {
+	return s.repo.Delete(ctx, id)
 }
 
-func (s *TourService) DecrementCapacity(id int) error {
-	return s.repo.DecrementCapacity(id)
+func (s *TourService) DecrementCapacity(ctx context.Context, id int) error {
+	return s.repo.DecrementCapacity(ctx, id)
 }
 
-func (s *TourService) IncrementCapacity(id int) error {
-	return s.repo.IncrementCapacity(id)
+func (s *TourService) IncrementCapacity(ctx context.Context, id int) error {
+	return s.repo.IncrementCapacity(ctx, id)
 }
