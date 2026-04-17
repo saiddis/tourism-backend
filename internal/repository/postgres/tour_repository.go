@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository/queries"
 )
@@ -78,6 +79,26 @@ func (r *TourRepositoryPostgres) Update(tour *domain.Tour) error {
 
 func (r *TourRepositoryPostgres) Delete(id int) error {
 	_, err := r.db.Exec(queries.DeleteTour, id)
+	return err
+}
+
+func (r *TourRepositoryPostgres) DecrementCapacity(id int) error {
+	result, err := r.db.Exec(queries.DecrementTourCapacity, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("no capacity available")
+	}
+	return nil
+}
+
+func (r *TourRepositoryPostgres) IncrementCapacity(id int) error {
+	_, err := r.db.Exec(queries.IncrementTourCapacity, id)
 	return err
 }
 

@@ -138,6 +138,35 @@ func (s *UserService) Deposit(id int, amount float64) (*domain.User, error) {
 	return user, nil
 }
 
+func (s *UserService) DeductBalance(userID int, amount float64) error {
+	if amount <= 0 {
+		return errors.New("amount must be positive")
+	}
+	return s.repo.DeductBalance(userID, amount)
+}
+
+func (s *UserService) RefundBalance(userID int, amount float64) (*domain.User, error) {
+	if amount <= 0 {
+		return nil, errors.New("amount must be positive")
+	}
+
+	user, err := s.repo.GetByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	newBalance := user.Balance + amount
+	if err := s.repo.UpdateBalance(userID, newBalance); err != nil {
+		return nil, err
+	}
+
+	user.Balance = newBalance
+	return user, nil
+}
+
 func hashPassword(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

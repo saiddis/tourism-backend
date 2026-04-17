@@ -9,4 +9,6 @@ type TourRepository interface {
 	GetByDestinationID(destinationID int) ([]*domain.Tour, error)
 	Update(tour *domain.Tour) error
 	Delete(id int) error
+	DecrementCapacity(id int) error
+	IncrementCapacity(id int) error
 }

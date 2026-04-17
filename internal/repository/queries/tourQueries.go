@@ -72,4 +72,8 @@ FROM tours t
 JOIN destinations d ON d.id = t.destination_id
 WHERE t.destination_id = $1
 ORDER BY t.start_date, t.id`
+	DecrementTourCapacity = `
+UPDATE tours SET capacity = capacity - 1 WHERE id = $1 AND capacity > 0`
+	IncrementTourCapacity = `
+UPDATE tours SET capacity = capacity + 1 WHERE id = $1`
 )

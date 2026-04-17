@@ -15,8 +15,15 @@ func NewPaymentService(repo repository.PaymentRepository) *PaymentService {
 	return &PaymentService{repo: repo}
 }
 
-func (s *PaymentService) Create(payment *domain.Payment) (*domain.Payment, error) {
-	payment.Status = domain.PaymentStatusPending
+func (s *PaymentService) Create(payment *domain.Payment, statusOverride ...domain.PaymentStatus) (*domain.Payment, error) {
+	if len(statusOverride) > 0 {
+		payment.Status = statusOverride[0]
+	} else {
+		payment.Status = domain.PaymentStatusPending
+	}
+	if payment.Currency == "" {
+		payment.Currency = "TJS"
+	}
 	if err := s.repo.Create(payment); err != nil {
 		return nil, err
 	}

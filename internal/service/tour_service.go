@@ -50,3 +50,11 @@ func (s *TourService) Update(tour *domain.Tour) (*domain.Tour, error) {
 func (s *TourService) Delete(id int) error {
 	return s.repo.Delete(id)
 }
+
+func (s *TourService) DecrementCapacity(id int) error {
+	return s.repo.DecrementCapacity(id)
+}
+
+func (s *TourService) IncrementCapacity(id int) error {
+	return s.repo.IncrementCapacity(id)
+}

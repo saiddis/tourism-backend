@@ -12,4 +12,5 @@ type UserRepository interface {
 	Delete(id int) error
 	UpdateAvatarURL(id int, url string) error
 	UpdateBalance(id int, balance float64) error
+	DeductBalance(id int, amount float64) error
 }

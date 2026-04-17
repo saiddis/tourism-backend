@@ -48,7 +48,7 @@ func main() {
 	// 5. Handler
 	userHandler := handler.NewUserHandler(userService, cfg.CookieDomain)
 	tourHandler := handler.NewTourHandler(tourService)
-	bookingHandler := handler.NewBookingHandler(bookingService)
+	bookingHandler := handler.NewBookingHandler(bookingService, tourService, userService, paymentService)
 	paymentHandler := handler.NewPaymentHandler(paymentService, bookingService)
 	reviewHandler := handler.NewReviewHandler(reviewService)
 	destinationHandler := handler.NewDestinationHandler(destinationService)

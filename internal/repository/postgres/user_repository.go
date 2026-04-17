@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository/queries"
 )
@@ -101,4 +102,19 @@ func (r *UserRepositoryPostgres) UpdateAvatarURL(id int, url string) error {
 func (r *UserRepositoryPostgres) UpdateBalance(id int, balance float64) error {
 	_, err := r.db.Exec(queries.UpdateUserBalance, balance, id)
 	return err
+}
+
+func (r *UserRepositoryPostgres) DeductBalance(id int, amount float64) error {
+	result, err := r.db.Exec(queries.DeductUserBalance, amount, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("insufficient balance")
+	}
+	return nil
 }
