@@ -2,7 +2,11 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -204,4 +208,156 @@ func (h *UserHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondJSON(w, http.StatusOK, user)
+}
+
+func (h *UserHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+
+	var req struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	user, err := h.service.Update(claims.UserID, req.Name, req.Email)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, user)
+}
+
+func (h *UserHandler) SetAvatarURL(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+
+	var req struct {
+		AvatarURL string `json:"avatar_url"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.AvatarURL == "" {
+		respondError(w, http.StatusBadRequest, "avatar_url is required")
+		return
+	}
+
+	if err := h.service.UpdateAvatarURL(claims.UserID, req.AvatarURL); err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	user, err := h.service.GetByID(claims.UserID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, user)
+}
+
+func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB max
+		respondError(w, http.StatusBadRequest, "failed to parse form")
+		return
+	}
+
+	file, header, err := r.FormFile("avatar")
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "avatar file is required")
+		return
+	}
+	defer file.Close()
+
+	ext := filepath.Ext(header.Filename)
+	allowedExts := map[string]bool{".jpg": true, ".jpeg": true, ".png": true, ".webp": true, ".gif": true}
+	if !allowedExts[ext] {
+		respondError(w, http.StatusBadRequest, "invalid file type. allowed: jpg, jpeg, png, webp, gif")
+		return
+	}
+
+	if header.Size > 5*1024*1024 {
+		respondError(w, http.StatusBadRequest, "file too large. max 5MB")
+		return
+	}
+
+	avatarDir := getUploadDir()
+	if err := os.MkdirAll(avatarDir, 0755); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to create upload directory")
+		return
+	}
+
+	filename := fmt.Sprintf("avatar_%d%s", claims.UserID, ext)
+	avatarPath := filepath.Join(avatarDir, filename)
+
+	dst, err := os.Create(avatarPath)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to save file")
+		return
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, file); err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to save file")
+		return
+	}
+
+	avatarURL := fmt.Sprintf("/uploads/avatars/%s", filename)
+	if err := h.service.UpdateAvatarURL(claims.UserID, avatarURL); err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	user, err := h.service.GetByID(claims.UserID)
+	if err != nil {
+		respondError(w, http.StatusNotFound, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, user)
+}
+
+func (h *UserHandler) Deposit(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+
+	var req struct {
+		Amount float64 `json:"amount"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.Amount <= 0 {
+		respondError(w, http.StatusBadRequest, "amount must be positive")
+		return
+	}
+
+	user, err := h.service.Deposit(claims.UserID, req.Amount)
+	if err != nil {
+		respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, user)
+}
+
+var uploadDir string
+
+func SetUploadDir(dir string) {
+	uploadDir = dir
+}
+
+func getUploadDir() string {
+	if uploadDir != "" {
+		return uploadDir
+	}
+	return "./uploads/avatars"
 }

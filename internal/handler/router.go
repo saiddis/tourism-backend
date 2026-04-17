@@ -39,6 +39,10 @@ func NewRouter(
 
 		// Client и выше
 		r.Get("/users/me", userHandler.Me)
+		r.Patch("/users/me", userHandler.UpdateMe)
+		r.Post("/users/me/avatar", userHandler.UploadAvatar)
+		r.Put("/users/me/avatar-url", userHandler.SetAvatarURL)
+		r.Post("/users/deposit", userHandler.Deposit)
 		r.Post("/bookings", bookingHandler.Create)
 		r.Get("/bookings/user/{id}", bookingHandler.GetByUserID)
 		r.Put("/bookings/{id}/status", bookingHandler.UpdateStatus)

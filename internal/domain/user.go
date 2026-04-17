@@ -16,5 +16,7 @@ type User struct {
 	Email        string    `json:"email"`
 	PasswordHash string    `json:"-"` // json:"-" означает: не показывать в JSON ответе
 	Role         UserRole  `json:"role"`
+	AvatarURL    *string   `json:"avatar_url,omitempty"`
+	Balance      float64   `json:"balance"`
 	CreatedAt    time.Time `json:"created_at"`
 }

@@ -94,6 +94,50 @@ func (s *UserService) GetAll() ([]*domain.User, error) {
 	return users, nil
 }
 
+func (s *UserService) Update(id int, name, email string) (*domain.User, error) {
+	user, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	user.Name = name
+	user.Email = email
+
+	if err := s.repo.Update(user); err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *UserService) UpdateAvatarURL(id int, url string) error {
+	return s.repo.UpdateAvatarURL(id, url)
+}
+
+func (s *UserService) Deposit(id int, amount float64) (*domain.User, error) {
+	if amount <= 0 {
+		return nil, errors.New("amount must be positive")
+	}
+
+	user, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	newBalance := user.Balance + amount
+	if err := s.repo.UpdateBalance(id, newBalance); err != nil {
+		return nil, err
+	}
+
+	user.Balance = newBalance
+	return user, nil
+}
+
 func hashPassword(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {

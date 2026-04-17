@@ -10,4 +10,6 @@ type UserRepository interface {
 	Update(user *domain.User) error
 	UpdatePasswordHash(id int, passwordHash string) error
 	Delete(id int) error
+	UpdateAvatarURL(id int, url string) error
+	UpdateBalance(id int, balance float64) error
 }

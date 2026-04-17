@@ -20,12 +20,20 @@ func (r *UserRepositoryPostgres) Create(user *domain.User) error {
 
 func (r *UserRepositoryPostgres) GetByEmail(email string) (*domain.User, error) {
 	user := &domain.User{}
-	err := r.db.QueryRow(queries.GetUserByEmail, email).Scan(&user.ID, &user.Name, &user.Email, &user.PasswordHash, &user.Role, &user.CreatedAt)
+	err := r.db.QueryRow(queries.GetUserByEmail, email).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.PasswordHash,
+		&user.Role,
+		&user.AvatarURL,
+		&user.Balance,
+		&user.CreatedAt,
+	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	return user, err
-
 }
 
 func (r *UserRepositoryPostgres) GetAll() ([]*domain.User, error) {
@@ -42,6 +50,8 @@ func (r *UserRepositoryPostgres) GetAll() ([]*domain.User, error) {
 			&user.Name,
 			&user.Email,
 			&user.Role,
+			&user.AvatarURL,
+			&user.Balance,
 			&user.CreatedAt)
 		if err != nil {
 			return nil, err
@@ -73,10 +83,22 @@ func (r *UserRepositoryPostgres) GetByID(id int) (*domain.User, error) {
 		&user.Name,
 		&user.Email,
 		&user.Role,
+		&user.AvatarURL,
+		&user.Balance,
 		&user.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
 	return user, err
+}
+
+func (r *UserRepositoryPostgres) UpdateAvatarURL(id int, url string) error {
+	_, err := r.db.Exec(queries.UpdateUserAvatarURL, url, id)
+	return err
+}
+
+func (r *UserRepositoryPostgres) UpdateBalance(id int, balance float64) error {
+	_, err := r.db.Exec(queries.UpdateUserBalance, balance, id)
+	return err
 }

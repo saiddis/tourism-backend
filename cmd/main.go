@@ -17,6 +17,10 @@ func main() {
 	cfg := config.Load()
 
 	middleware.InitSecrets(cfg.AccessTokenSecret, cfg.RefreshTokenSecret)
+
+	// Set upload directory for avatars
+	handler.SetUploadDir(cfg.UploadDir)
+
 	// 2. Подключаемся к БД
 	db, err := storage.NewPostgresDB(cfg)
 	if err != nil {
@@ -58,6 +62,9 @@ func main() {
 		reviewHandler,
 		destinationHandler,
 	)
+
+	// Serve static files for uploads
+	router.Mount("/uploads", http.StripPrefix("/uploads", http.FileServer(http.Dir(cfg.UploadDir))))
 
 	// 7. Запуск сервера
 	fmt.Println("Server starting on port", cfg.ServerPort)
