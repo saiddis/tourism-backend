@@ -1,33 +1,34 @@
 package email
 
 import (
+	"context"
 	"fmt"
-	"net/smtp"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/mailersend/mailersend-go"
 	"tourism-backend/internal/domain"
 )
 
 type EmailService struct {
-	host       string
-	port       string
-	username   string
-	password   string
+	apiKey     string
+	fromEmail  string
+	fromName   string
 	adminEmail string
 }
 
 func NewEmailService() *EmailService {
 	return &EmailService{
-		host:       os.Getenv("SMTP_HOST"),
-		port:       os.Getenv("SMTP_PORT"),
-		username:   os.Getenv("SMTP_USER"),
-		password:   os.Getenv("SMTP_PASSWORD"),
+		apiKey:     os.Getenv("MAILERSEND_API_KEY"),
+		fromEmail:  os.Getenv("MAILERSEND_FROM_EMAIL"),
+		fromName:   os.Getenv("MAILERSEND_FROM_NAME"),
 		adminEmail: os.Getenv("ADMIN_EMAIL"),
 	}
 }
 
 func (s *EmailService) SendProviderApplicationEmail(userName, userEmail string, app *domain.ProviderApplication) error {
-	if s.host == "" || s.adminEmail == "" {
+	if s.apiKey == "" || s.adminEmail == "" {
 		return nil
 	}
 
@@ -69,7 +70,7 @@ Submitted: %s
 }
 
 func (s *EmailService) SendApplicationStatusEmail(toEmail, status, adminNote string) error {
-	if s.host == "" {
+	if s.apiKey == "" {
 		return nil
 	}
 
@@ -91,20 +92,28 @@ Your provider application has been %s.
 }
 
 func (s *EmailService) send(to, subject, body string) error {
-	from := s.username
+	ms := mailersend.NewMailersend(s.apiKey)
 
-	headers := fmt.Sprintf("From: %s\r\n"+
-		"To: %s\r\n"+
-		"Subject: %s\r\n"+
-		"Content-Type: text/plain; charset=UTF-8\r\n"+
-		"\r\n", from, to, subject)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	message := headers + body
+	message := ms.Email.NewMessage()
 
-	auth := smtp.PlainAuth("", s.username, s.password, s.host)
-	addr := fmt.Sprintf("%s:%s", s.host, s.port)
+	message.SetFrom(mailersend.From{
+		Name:  s.fromName,
+		Email: s.fromEmail,
+	})
 
-	err := smtp.SendMail(addr, auth, from, []string{to}, []byte(message))
+	message.SetRecipients([]mailersend.Recipient{
+		{
+			Email: to,
+		},
+	})
+
+	message.SetSubject(subject)
+	message.SetText(body)
+
+	_, err := ms.Email.Send(ctx, message)
 	return err
 }
 
