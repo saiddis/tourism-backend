@@ -4,6 +4,7 @@ import "time"
 
 type Tour struct {
 	ID                     int       `json:"id"`
+	UserID                 int       `json:"user_id,omitempty"`
 	DestinationID          int       `json:"destination_id"`
 	DestinationName        string    `json:"destination_name,omitempty"`
 	DestinationDescription string    `json:"destination_description,omitempty"`
@@ -14,5 +15,6 @@ type Tour struct {
 	StartDate              time.Time `json:"start_date"`
 	EndDate                time.Time `json:"end_date"`
 	Capacity               int       `json:"capacity"`
+	ProviderID             *int      `json:"provider_id,omitempty"`
 	CreatedAt              time.Time `json:"created_at"`
 }

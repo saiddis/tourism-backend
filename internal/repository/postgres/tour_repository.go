@@ -17,7 +17,7 @@ func NewTourRepositoryPostgres(db *sql.DB) *TourRepositoryPostgres {
 }
 
 func (r *TourRepositoryPostgres) Create(ctx context.Context, tour *domain.Tour) error {
-	return r.db.QueryRowContext(ctx, queries.CreateTour, tour.DestinationID, tour.Name, tour.Description, tour.Price, tour.StartDate, tour.EndDate, tour.Capacity).Scan(&tour.ID, &tour.CreatedAt)
+	return r.db.QueryRowContext(ctx, queries.CreateTour, tour.DestinationID, tour.ProviderID, tour.Name, tour.Description, tour.Price, tour.StartDate, tour.EndDate, tour.Capacity).Scan(&tour.ID, &tour.CreatedAt)
 }
 
 func (r *TourRepositoryPostgres) GetByID(ctx context.Context, id int) (*domain.Tour, error) {
@@ -68,6 +68,7 @@ func (r *TourRepositoryPostgres) GetByDestinationID(ctx context.Context, destina
 func (r *TourRepositoryPostgres) Update(ctx context.Context, tour *domain.Tour) error {
 	return r.db.QueryRowContext(ctx, queries.UpdateTour,
 		tour.DestinationID,
+		tour.ProviderID,
 		tour.Name,
 		tour.Description,
 		tour.Price,
@@ -113,9 +114,11 @@ func scanTour(scanner rowScanner, tour *domain.Tour) error {
 	var destinationImageURL sql.NullString
 	var destinationCreatedAt sql.NullTime
 	var joinedDestinationID int
+	var providerID sql.NullInt64
 	err := scanner.Scan(
 		&tour.ID,
 		&tour.DestinationID,
+		&providerID,
 		&tour.Name,
 		&description,
 		&tour.Price,
@@ -131,6 +134,10 @@ func scanTour(scanner rowScanner, tour *domain.Tour) error {
 	)
 	if err != nil {
 		return err
+	}
+	if providerID.Valid {
+		tour.ProviderID = new(int)
+		*tour.ProviderID = int(providerID.Int64)
 	}
 	tour.Description = description.String
 	tour.DestinationDescription = destinationDescription.String

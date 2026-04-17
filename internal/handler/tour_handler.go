@@ -8,14 +8,16 @@ import (
 	"tourism-backend/internal/service"
 
 	"github.com/go-chi/chi/v5"
+	middleware "tourism-backend/internal/middlewares"
 )
 
 type TourHandler struct {
-	service *service.TourService
+	service         *service.TourService
+	providerService *service.ProviderService
 }
 
-func NewTourHandler(service *service.TourService) *TourHandler {
-	return &TourHandler{service: service}
+func NewTourHandler(service *service.TourService, providerService *service.ProviderService) *TourHandler {
+	return &TourHandler{service: service, providerService: providerService}
 }
 
 func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -24,6 +26,34 @@ func (h *TourHandler) Create(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
+	result, err := h.service.Create(r.Context(), &tour)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondJSON(w, http.StatusCreated, result)
+}
+
+func (h *TourHandler) CreateForProvider(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	provider, err := h.providerService.GetByUserID(r.Context(), claims.UserID)
+	if err != nil || provider == nil || !provider.Active {
+		respondError(w, http.StatusForbidden, "no active provider profile")
+		return
+	}
+
+	var tour domain.Tour
+	if err := json.NewDecoder(r.Body).Decode(&tour); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	tour.ProviderID = &provider.ID
+
 	result, err := h.service.Create(r.Context(), &tour)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())

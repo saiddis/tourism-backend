@@ -39,6 +39,7 @@ func main() {
 	destinationRepo := postgres.NewDestinationRepository(db)
 	providerRepo := postgres.NewProviderRepository(db)
 	providerAppRepo := postgres.NewProviderApplicationRepository(db)
+	tourHighlightRepo := postgres.NewTourHighlightRepositoryPostgres(db)
 
 	// 4. Service
 	userService := service.NewUserService(userRepo)
@@ -50,16 +51,18 @@ func main() {
 	emailService := email.NewEmailService()
 	providerService := service.NewProviderService(providerRepo, userRepo)
 	providerAppService := service.NewProviderApplicationService(providerAppRepo, providerRepo, userRepo, emailService)
+	tourHighlightService := service.NewTourHighlightService(tourHighlightRepo)
 
 	// 5. Handler
 	userHandler := handler.NewUserHandler(userService, cfg.CookieDomain)
-	tourHandler := handler.NewTourHandler(tourService)
+	tourHandler := handler.NewTourHandler(tourService, providerService)
 	bookingHandler := handler.NewBookingHandler(bookingService, tourService, userService, paymentService)
 	paymentHandler := handler.NewPaymentHandler(paymentService, bookingService)
 	reviewHandler := handler.NewReviewHandler(reviewService)
 	destinationHandler := handler.NewDestinationHandler(destinationService)
 	providerHandler := handler.NewProviderHandler(providerService)
 	providerAppHandler := handler.NewProviderApplicationHandler(providerAppService)
+	tourHighlightHandler := handler.NewTourHighlightHandler(tourHighlightService)
 
 	// 6. Router
 	router := handler.NewRouter(
@@ -71,6 +74,7 @@ func main() {
 		destinationHandler,
 		providerHandler,
 		providerAppHandler,
+		tourHighlightHandler,
 	)
 
 	// Serve static files for uploads

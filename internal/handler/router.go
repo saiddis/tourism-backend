@@ -16,6 +16,7 @@ func NewRouter(
 	destinationHandler *DestinationHandler,
 	providerHandler *ProviderHandler,
 	providerAppHandler *ProviderApplicationHandler,
+	tourHighlightHandler *TourHighlightHandler,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
@@ -37,6 +38,7 @@ func NewRouter(
 	r.Get("/providers/active", providerHandler.GetActive)
 	r.Get("/providers/user/{userId}", providerHandler.GetByUserID)
 	r.Get("/providers/{id}", providerHandler.GetByID)
+	r.Get("/tours/{id}/highlights", tourHighlightHandler.GetByTourID)
 
 	// 🔐 Защищённые endpoints
 	r.Group(func(r chi.Router) {
@@ -57,6 +59,9 @@ func NewRouter(
 		r.Get("/provider-applications/me", providerAppHandler.GetByUserID)
 		r.Get("/providers/me", providerHandler.GetByUserID)
 		r.Put("/providers/{id}", providerHandler.Update)
+		r.Post("/providers/me/tours", tourHandler.CreateForProvider)
+		r.Post("/tours/{id}/highlights", tourHighlightHandler.Create)
+		r.Delete("/tours/{id}/highlights/{highlightId}", tourHighlightHandler.Delete)
 
 		// Только manager и admin
 		r.Group(func(r chi.Router) {
