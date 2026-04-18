@@ -8,7 +8,12 @@ returning id,created_at`
 	GetBookingByID = `
 SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
 	t.id,t.destination_id,t.name,t.description,t.price,t.start_date,t.end_date,t.capacity,t.created_at,
-	d.id,d.name,d.description,d.image_url,d.created_at
+	d.id,d.name,d.description,d.image_url,d.created_at,
+	COALESCE(
+		(SELECT t.capacity - COALESCE(SUM(CASE WHEN b2.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
+		FROM bookings b2 WHERE b2.tour_id = t.id GROUP BY t.capacity),
+		t.capacity
+	) as remaining_spots
 FROM bookings b
 JOIN tours t ON t.id = b.tour_id
 JOIN destinations d ON d.id = t.destination_id
@@ -16,7 +21,12 @@ WHERE b.id = $1`
 	GetBookingsByUserID = `
 SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
 	t.id,t.destination_id,t.name,t.description,t.price,t.start_date,t.end_date,t.capacity,t.created_at,
-	d.id,d.name,d.description,d.image_url,d.created_at
+	d.id,d.name,d.description,d.image_url,d.created_at,
+	COALESCE(
+		(SELECT t.capacity - COALESCE(SUM(CASE WHEN b2.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
+		FROM bookings b2 WHERE b2.tour_id = t.id GROUP BY t.capacity),
+		t.capacity
+	) as remaining_spots
 FROM bookings b
 JOIN tours t ON t.id = b.tour_id
 JOIN destinations d ON d.id = t.destination_id
@@ -25,7 +35,12 @@ ORDER BY b.created_at DESC`
 	GetAllBookings = `
 SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
 	t.id,t.destination_id,t.name,t.description,t.price,t.start_date,t.end_date,t.capacity,t.created_at,
-	d.id,d.name,d.description,d.image_url,d.created_at
+	d.id,d.name,d.description,d.image_url,d.created_at,
+	COALESCE(
+		(SELECT t.capacity - COALESCE(SUM(CASE WHEN b2.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
+		FROM bookings b2 WHERE b2.tour_id = t.id GROUP BY t.capacity),
+		t.capacity
+	) as remaining_spots
 FROM bookings b
 JOIN tours t ON t.id = b.tour_id
 JOIN destinations d ON d.id = t.destination_id
@@ -59,7 +74,12 @@ AND tour_id IN (SELECT id FROM tours WHERE end_date < NOW())`
 	GetCompletedBookingsByUserID = `
 SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
 	t.id,t.destination_id,t.name,t.description,t.price,t.start_date,t.end_date,t.capacity,t.created_at,
-	d.id,d.name,d.description,d.image_url,d.created_at
+	d.id,d.name,d.description,d.image_url,d.created_at,
+	COALESCE(
+		(SELECT t.capacity - COALESCE(SUM(CASE WHEN b2.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
+		FROM bookings b2 WHERE b2.tour_id = t.id GROUP BY t.capacity),
+		t.capacity
+	) as remaining_spots
 FROM bookings b
 JOIN tours t ON t.id = b.tour_id
 JOIN destinations d ON d.id = t.destination_id

@@ -84,7 +84,7 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. Create booking (confirmed)
+	// 5. Create booking (pending - will be auto-confirmed if last spot filled)
 	booking := &domain.Booking{
 		UserID:                 claims.UserID,
 		TourID:                 req.TourID,
@@ -98,7 +98,7 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		DestinationName:        tour.DestinationName,
 		DestinationDescription: tour.DestinationDescription,
 		DestinationImageURL:    tour.DestinationImageURL,
-		Status:                 domain.BookingStatusConfirmed,
+		Status:                 domain.BookingStatusPending,
 	}
 
 	booking, err = h.service.Create(ctx, booking)
@@ -117,6 +117,11 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := h.paymentService.Create(ctx, payment, domain.PaymentStatusPaid); err != nil {
 		// Non-critical: payment record failed but booking succeeded
+	}
+
+	// 7. Check if last spot filled - confirm all pending bookings
+	if err := h.service.CheckAndConfirmIfFull(ctx, req.TourID); err != nil {
+		// Non-critical: auto-confirm failed but booking succeeded
 	}
 
 	// 7. Get updated user with new balance

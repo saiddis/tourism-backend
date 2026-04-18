@@ -21,6 +21,7 @@ type Booking struct {
 	TourStartDate          time.Time     `json:"tour_start_date,omitempty"`
 	TourEndDate            time.Time     `json:"tour_end_date,omitempty"`
 	TourCapacity           int           `json:"tour_capacity,omitempty"`
+	RemainingSpots         int           `json:"remaining_spots,omitempty"`
 	DestinationID          int           `json:"destination_id,omitempty"`
 	DestinationName        string        `json:"destination_name,omitempty"`
 	DestinationDescription string        `json:"destination_description,omitempty"`

@@ -197,6 +197,7 @@ func scanBooking(scanner rowScanner, booking *domain.Booking) error {
 		&destinationDescription,
 		&destinationImageURL,
 		&destinationCreatedAt,
+		&booking.RemainingSpots,
 	)
 	if err != nil {
 		return err

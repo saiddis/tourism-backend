@@ -99,3 +99,37 @@ func (s *BookingService) MarkCompletedBookings(ctx context.Context) error {
 func (s *BookingService) GetCompletedBookingsByUserID(ctx context.Context, userID int) ([]*domain.Booking, error) {
 	return s.repo.GetCompletedBookingsByUserID(ctx, userID)
 }
+
+func (s *BookingService) CheckAndConfirmIfFull(ctx context.Context, tourID int) error {
+	remaining, err := s.tourService.GetRemainingSpots(ctx, tourID)
+	if err != nil {
+		return err
+	}
+	if remaining > 0 {
+		return nil
+	}
+
+	bookings, err := s.repo.GetPendingBookingsByTourID(ctx, tourID)
+	if err != nil {
+		return err
+	}
+
+	if len(bookings) == 0 {
+		return nil
+	}
+
+	tour, err := s.tourService.GetByID(ctx, tourID)
+	if err != nil {
+		return err
+	}
+
+	if err := s.repo.ConfirmPendingBookingsForTour(ctx, tourID); err != nil {
+		return err
+	}
+
+	for _, b := range bookings {
+		s.emailService.SendBookingConfirmationEmail(b.Email, b.Name, tour.Name, tour.StartDate)
+	}
+
+	return nil
+}
