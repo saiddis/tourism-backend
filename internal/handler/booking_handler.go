@@ -117,6 +117,20 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 	// 7. Decrement tour capacity
 	h.tourService.DecrementCapacity(ctx, tour.ID)
 
+	// 8. Get updated user with new balance
+	user, err := h.userService.GetByID(ctx, claims.UserID)
+	if err == nil {
+		tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role), user.Name, user.AvatarURL, user.Balance)
+		if err == nil {
+			resp := map[string]interface{}{
+				"booking":      booking,
+				"access_token": tokens.AccessToken,
+			}
+			respondJSON(w, http.StatusCreated, resp)
+			return
+		}
+	}
+
 	respondJSON(w, http.StatusCreated, booking)
 }
 

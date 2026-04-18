@@ -41,7 +41,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role))
+	tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role), user.Name, user.AvatarURL, user.Balance)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to generate tokens")
 		return
@@ -76,7 +76,7 @@ func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role))
+	tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role), user.Name, user.AvatarURL, user.Balance)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to generate tokens")
 		return
@@ -112,7 +112,7 @@ func (h *UserHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role))
+	tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role), user.Name, user.AvatarURL, user.Balance)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to generate tokens")
 		return
@@ -366,7 +366,17 @@ func (h *UserHandler) Deposit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondJSON(w, http.StatusOK, user)
+	tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role), user.Name, user.AvatarURL, user.Balance)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to generate tokens")
+		return
+	}
+
+	resp := map[string]interface{}{
+		"user":         user,
+		"access_token": tokens.AccessToken,
+	}
+	respondJSON(w, http.StatusOK, resp)
 }
 
 var uploadDir string

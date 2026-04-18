@@ -46,10 +46,13 @@ type RefreshToken struct {
 }
 
 type AccessToken struct {
-	UserID int    `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
-	Type   string `json:"type"`
+	UserID    int     `json:"user_id"`
+	Email     string  `json:"email"`
+	Name      string  `json:"name"`
+	Role      string  `json:"role"`
+	AvatarURL *string `json:"avatar_url,omitempty"`
+	Balance   float64 `json:"balance"`
+	Type      string  `json:"type"`
 	jwt.RegisteredClaims
 }
 
@@ -61,17 +64,20 @@ type TokenPair struct {
 	RefreshExpiresIn int64  `json:"refresh_expires_in"`
 }
 
-func GenerateToken(userID int, email, role string) (string, error) {
-	return GenerateAccessToken(userID, email, role)
+func GenerateToken(userID int, email, role, name string, avatarURL *string, balance float64) (string, error) {
+	return GenerateAccessToken(userID, email, role, name, avatarURL, balance)
 }
 
-func GenerateAccessToken(userID int, email, role string) (string, error) {
+func GenerateAccessToken(userID int, email, role, name string, avatarURL *string, balance float64) (string, error) {
 	now := time.Now()
 	claims := &AccessToken{
-		UserID: userID,
-		Email:  email,
-		Role:   role,
-		Type:   accessTokenType,
+		UserID:    userID,
+		Email:     email,
+		Name:      name,
+		Role:      role,
+		AvatarURL: avatarURL,
+		Balance:   balance,
+		Type:      accessTokenType,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   strconv.Itoa(userID),
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -97,8 +103,8 @@ func GenerateRefreshToken(userID int) (string, error) {
 	return signToken(claims, refreshTokenSecret)
 }
 
-func GenerateTokenPair(userID int, email, role string) (*TokenPair, error) {
-	accessToken, err := GenerateAccessToken(userID, email, role)
+func GenerateTokenPair(userID int, email, role, name string, avatarURL *string, balance float64) (*TokenPair, error) {
+	accessToken, err := GenerateAccessToken(userID, email, role, name, avatarURL, balance)
 	if err != nil {
 		return nil, err
 	}
