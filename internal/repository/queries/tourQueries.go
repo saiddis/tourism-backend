@@ -84,11 +84,11 @@ UPDATE tours SET capacity = capacity + 1 WHERE id = $1`
 // TOUR HIGHLIGHTS
 const (
 	CreateTourHighlight = `
-INSERT INTO tour_highlights (tour_id, image_url, title, sort_order)
-VALUES ($1, $2, $3, $4)
+INSERT INTO tour_highlights (tour_id, image_url, sort_order)
+VALUES ($1, $2, $3)
 RETURNING id, created_at`
 	GetTourHighlightsByTourID = `
-SELECT id, tour_id, image_url, title, sort_order, created_at
+SELECT id, tour_id, image_url, sort_order, created_at
 FROM tour_highlights
 WHERE tour_id = $1
 ORDER BY sort_order, id`

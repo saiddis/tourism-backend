@@ -16,14 +16,9 @@ func NewTourHighlightRepositoryPostgres(db *sql.DB) *TourHighlightRepositoryPost
 }
 
 func (r *TourHighlightRepositoryPostgres) Create(ctx context.Context, highlight *domain.TourHighlight) error {
-	var title *string
-	if highlight.Title != nil && *highlight.Title != "" {
-		title = highlight.Title
-	}
 	return r.db.QueryRowContext(ctx, queries.CreateTourHighlight,
 		highlight.TourID,
 		highlight.ImageURL,
-		title,
 		highlight.SortOrder,
 	).Scan(&highlight.ID, &highlight.CreatedAt)
 }
@@ -38,13 +33,9 @@ func (r *TourHighlightRepositoryPostgres) GetByTourID(ctx context.Context, tourI
 	highlights := make([]*domain.TourHighlight, 0)
 	for rows.Next() {
 		var h domain.TourHighlight
-		var title sql.NullString
-		err := rows.Scan(&h.ID, &h.TourID, &h.ImageURL, &title, &h.SortOrder, &h.CreatedAt)
+		err := rows.Scan(&h.ID, &h.TourID, &h.ImageURL, &h.SortOrder, &h.CreatedAt)
 		if err != nil {
 			return nil, err
-		}
-		if title.Valid {
-			h.Title = &title.String
 		}
 		highlights = append(highlights, &h)
 	}
