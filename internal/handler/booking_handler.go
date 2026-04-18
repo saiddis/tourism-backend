@@ -208,8 +208,8 @@ func (h *BookingHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// If cancelling a confirmed booking, refund the user
-	if req.Status == domain.BookingStatusCancelled && booking.Status == domain.BookingStatusConfirmed {
+	// If cancelling a pending booking, refund the user (confirmed bookings are non-refundable)
+	if req.Status == domain.BookingStatusCancelled && booking.Status == domain.BookingStatusPending {
 		_, err := h.userService.RefundBalance(ctx, booking.UserID, booking.TourPrice)
 		if err != nil {
 			respondError(w, http.StatusInternalServerError, "failed to process refund")

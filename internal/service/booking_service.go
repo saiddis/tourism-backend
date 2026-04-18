@@ -4,15 +4,19 @@ import (
 	"context"
 	"errors"
 	"tourism-backend/internal/domain"
+	"tourism-backend/internal/email"
 	"tourism-backend/internal/repository"
 )
 
 type BookingService struct {
-	repo repository.BookingRepository
+	repo         repository.BookingRepository
+	userService  *UserService
+	tourService  *TourService
+	emailService *email.EmailService
 }
 
-func NewBookingService(repo repository.BookingRepository) *BookingService {
-	return &BookingService{repo: repo}
+func NewBookingService(repo repository.BookingRepository, userService *UserService, tourService *TourService, emailService *email.EmailService) *BookingService {
+	return &BookingService{repo: repo, userService: userService, tourService: tourService, emailService: emailService}
 }
 
 func (s *BookingService) Create(ctx context.Context, booking *domain.Booking) (*domain.Booking, error) {
@@ -50,4 +54,36 @@ func (s *BookingService) UpdateStatus(ctx context.Context, id int, status domain
 
 func (s *BookingService) Delete(ctx context.Context, id int) error {
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *BookingService) GetPendingBookingsCount(ctx context.Context, tourID int) (int, error) {
+	return s.repo.GetPendingBookingsCountByTourID(ctx, tourID)
+}
+
+func (s *BookingService) ConfirmPendingBookings(ctx context.Context, tourID int) error {
+	return s.repo.ConfirmPendingBookingsForTour(ctx, tourID)
+}
+
+func (s *BookingService) ConfirmAllDueBookings(ctx context.Context) error {
+	tours, err := s.repo.GetToursNeedingConfirmation(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, tour := range tours {
+		bookings, err := s.repo.GetPendingBookingsByTourID(ctx, tour.TourID)
+		if err != nil {
+			continue
+		}
+
+		if err := s.repo.ConfirmPendingBookingsForTour(ctx, tour.TourID); err != nil {
+			continue
+		}
+
+		for _, booking := range bookings {
+			s.emailService.SendBookingConfirmationEmail(booking.Email, booking.Name, tour.Name, tour.StartDate)
+		}
+	}
+
+	return nil
 }

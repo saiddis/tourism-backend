@@ -107,6 +107,32 @@ Your provider application has been %s.
 	return s.send(toEmail, subject, body)
 }
 
+func (s *EmailService) SendBookingConfirmationEmail(toEmail, userName, tourName string, startDate time.Time) error {
+	if s.apiKey == "" {
+		return nil
+	}
+
+	subject := "Your Tour Booking Has Been Confirmed!"
+
+	body := fmt.Sprintf(`Hello %s,
+
+Great news! Your booking for the tour "%s" has been confirmed!
+
+Tour Details:
+- Tour: %s
+- Start Date: %s
+
+Your spot is now secured. Please make sure to arrive on time for the tour.
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+Tourism Platform Team
+`, userName, tourName, tourName, startDate.Format("2006-01-02"))
+
+	return s.send(toEmail, subject, body)
+}
+
 func (s *EmailService) send(to, subject, body string) error {
 	ms := mailersend.NewMailersend(s.apiKey)
 

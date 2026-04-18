@@ -90,4 +90,24 @@ UPDATE bookings SET status = $1 WHERE id = $2`
 
 	DeleteBooking = `
 DELETE FROM bookings WHERE id = $1`
+
+	GetPendingBookingsCountByTourID = `
+SELECT COUNT(*) FROM bookings WHERE tour_id = $1 AND status = 'pending'`
+
+	GetPendingBookingsByTourID = `
+SELECT b.id, b.user_id, b.tour_id, b.status, b.created_at, u.email, u.name
+FROM bookings b
+JOIN users u ON u.id = b.user_id
+WHERE b.tour_id = $1 AND b.status = 'pending'`
+
+	ConfirmPendingBookingsForTour = `
+UPDATE bookings SET status = 'confirmed' WHERE tour_id = $1 AND status = 'pending'`
+
+	GetToursNeedingConfirmation = `
+SELECT t.id, t.name, t.start_date, t.capacity, COUNT(b.id) as pending_count
+FROM tours t
+LEFT JOIN bookings b ON b.tour_id = t.id AND b.status = 'pending'
+GROUP BY t.id
+HAVING COUNT(b.id) >= t.capacity
+   OR t.start_date <= NOW() + INTERVAL '24 hours'`
 )

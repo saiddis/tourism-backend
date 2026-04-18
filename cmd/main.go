@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 	"tourism-backend/config"
 	"tourism-backend/internal/email"
 	"tourism-backend/internal/handler"
 	middleware "tourism-backend/internal/middlewares"
 	"tourism-backend/internal/repository/postgres"
 	"tourism-backend/internal/service"
+	"tourism-backend/internal/ticker"
 	"tourism-backend/storage"
 )
 
@@ -44,14 +46,18 @@ func main() {
 	// 4. Service
 	userService := service.NewUserService(userRepo)
 	tourService := service.NewTourService(tourRepo)
-	bookingService := service.NewBookingService(bookingRepo)
+	emailService := email.NewEmailService()
+	bookingService := service.NewBookingService(bookingRepo, userService, tourService, emailService)
 	paymentService := service.NewPaymentService(paymentRepo)
 	reviewService := service.NewReviewService(reviewRepo)
 	destinationService := service.NewDestinationService(destinationRepo)
-	emailService := email.NewEmailService()
 	providerService := service.NewProviderService(providerRepo, userRepo)
 	providerAppService := service.NewProviderApplicationService(providerAppRepo, providerRepo, userRepo, emailService)
 	tourHighlightService := service.NewTourHighlightService(tourHighlightRepo)
+
+	// Start booking confirmation ticker
+	bookingTicker := ticker.NewBookingTicker(bookingService, time.Hour)
+	bookingTicker.Start()
 
 	// 5. Handler
 	userHandler := handler.NewUserHandler(userService, cfg.CookieDomain)
