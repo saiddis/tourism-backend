@@ -154,7 +154,7 @@ func setRefreshTokenCookie(w http.ResponseWriter, token string, domain string) {
 		Value:    token,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 		Expires:  time.Now().Add(middleware.RefreshTokenTTL),
 	}
@@ -178,7 +178,7 @@ func clearRefreshTokenCookie(w http.ResponseWriter, domain string) {
 		Value:    "",
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 		Path:     "/",
 		MaxAge:   -1,
 	}
