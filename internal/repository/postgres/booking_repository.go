@@ -145,6 +145,30 @@ func (r *BookingRepositoryPostgres) GetToursNeedingConfirmation(ctx context.Cont
 	return tours, nil
 }
 
+func (r *BookingRepositoryPostgres) MarkBookingsCompleted(ctx context.Context) error {
+	_, err := r.db.ExecContext(ctx, queries.MarkBookingsCompleted)
+	return err
+}
+
+func (r *BookingRepositoryPostgres) GetCompletedBookingsByUserID(ctx context.Context, userID int) ([]*domain.Booking, error) {
+	rows, err := r.db.QueryContext(ctx, queries.GetCompletedBookingsByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	bookings := make([]*domain.Booking, 0)
+	for rows.Next() {
+		var booking domain.Booking
+		err := scanBooking(rows, &booking)
+		if err != nil {
+			return nil, err
+		}
+		bookings = append(bookings, &booking)
+	}
+	return bookings, nil
+}
+
 func scanBooking(scanner rowScanner, booking *domain.Booking) error {
 	var tourDescription sql.NullString
 	var destinationDescription sql.NullString

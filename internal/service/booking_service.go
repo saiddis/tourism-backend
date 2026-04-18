@@ -91,3 +91,11 @@ func (s *BookingService) ConfirmAllDueBookings(ctx context.Context) error {
 
 	return nil
 }
+
+func (s *BookingService) MarkCompletedBookings(ctx context.Context) error {
+	return s.repo.MarkBookingsCompleted(ctx)
+}
+
+func (s *BookingService) GetCompletedBookingsByUserID(ctx context.Context, userID int) ([]*domain.Booking, error) {
+	return s.repo.GetCompletedBookingsByUserID(ctx, userID)
+}

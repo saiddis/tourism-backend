@@ -51,4 +51,18 @@ FROM tours t
 WHERE t.start_date <= NOW() + INTERVAL '24 hours'
 	AND EXISTS (SELECT 1 FROM bookings WHERE tour_id = t.id AND status = 'pending')
 ORDER BY t.start_date`
+	MarkBookingsCompleted = `
+UPDATE bookings 
+SET status = 'completed' 
+WHERE status = 'confirmed' 
+AND tour_id IN (SELECT id FROM tours WHERE end_date < NOW())`
+	GetCompletedBookingsByUserID = `
+SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
+	t.id,t.destination_id,t.name,t.description,t.price,t.start_date,t.end_date,t.capacity,t.created_at,
+	d.id,d.name,d.description,d.image_url,d.created_at
+FROM bookings b
+JOIN tours t ON t.id = b.tour_id
+JOIN destinations d ON d.id = t.destination_id
+WHERE b.user_id = $1 AND b.status = 'completed'
+ORDER BY b.created_at DESC`
 )
