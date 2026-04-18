@@ -86,6 +86,12 @@ func (r *BookingRepositoryPostgres) GetPendingBookingsCountByTourID(ctx context.
 	return count, err
 }
 
+func (r *BookingRepositoryPostgres) GetActiveBookingsCount(ctx context.Context, tourID int) (int, error) {
+	var count int
+	err := r.db.QueryRowContext(ctx, queries.GetActiveBookingsCountByTourID, tourID).Scan(&count)
+	return count, err
+}
+
 func (r *BookingRepositoryPostgres) GetPendingBookingsByTourID(ctx context.Context, tourID int) ([]repository.PendingBookingWithUser, error) {
 	rows, err := r.db.QueryContext(ctx, queries.GetPendingBookingsByTourID, tourID)
 	if err != nil {

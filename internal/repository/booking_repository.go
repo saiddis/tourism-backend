@@ -32,6 +32,7 @@ type BookingRepository interface {
 	UpdateStatus(ctx context.Context, id int, status domain.BookingStatus) error
 	Delete(ctx context.Context, id int) error
 	GetPendingBookingsCountByTourID(ctx context.Context, tourID int) (int, error)
+	GetActiveBookingsCount(ctx context.Context, tourID int) (int, error)
 	GetPendingBookingsByTourID(ctx context.Context, tourID int) ([]PendingBookingWithUser, error)
 	ConfirmPendingBookingsForTour(ctx context.Context, tourID int) error
 	GetToursNeedingConfirmation(ctx context.Context) ([]TourConfirmationInfo, error)

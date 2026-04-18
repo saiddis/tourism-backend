@@ -14,4 +14,5 @@ type TourRepository interface {
 	Delete(ctx context.Context, id int) error
 	DecrementCapacity(ctx context.Context, id int) error
 	IncrementCapacity(ctx context.Context, id int) error
+	GetRemainingSpots(ctx context.Context, tourID int) (int, error)
 }

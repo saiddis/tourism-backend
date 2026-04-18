@@ -15,6 +15,7 @@ type Tour struct {
 	StartDate              time.Time        `json:"start_date"`
 	EndDate                time.Time        `json:"end_date"`
 	Capacity               int              `json:"capacity"`
+	RemainingSpots         int              `json:"remaining_spots"`
 	ProviderID             *int             `json:"provider_id,omitempty"`
 	Highlights             []*TourHighlight `json:"highlights,omitempty"`
 	CreatedAt              time.Time        `json:"created_at"`

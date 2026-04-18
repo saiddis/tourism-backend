@@ -59,3 +59,18 @@ func (s *TourService) DecrementCapacity(ctx context.Context, id int) error {
 func (s *TourService) IncrementCapacity(ctx context.Context, id int) error {
 	return s.repo.IncrementCapacity(ctx, id)
 }
+
+func (s *TourService) CalculateRemainingSpots(ctx context.Context, tours []*domain.Tour) error {
+	for _, tour := range tours {
+		remaining, err := s.repo.GetRemainingSpots(ctx, tour.ID)
+		if err != nil {
+			return err
+		}
+		tour.RemainingSpots = remaining
+	}
+	return nil
+}
+
+func (s *TourService) GetRemainingSpots(ctx context.Context, tourID int) (int, error) {
+	return s.repo.GetRemainingSpots(ctx, tourID)
+}

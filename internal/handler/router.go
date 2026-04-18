@@ -67,7 +67,7 @@ func NewRouter(
 
 		// Только manager и admin
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.RoleMiddleware("manager", "admin"))
+			r.Use(middleware.RoleMiddleware("provider", "admin"))
 			r.Get("/bookings", bookingHandler.GetAll)
 			r.Delete("/bookings/{id}", bookingHandler.Delete)
 			r.Post("/tours", tourHandler.Create)

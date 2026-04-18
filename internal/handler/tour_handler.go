@@ -68,6 +68,10 @@ func (h *TourHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	if err := h.service.CalculateRemainingSpots(r.Context(), tours); err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 	respondJSON(w, http.StatusOK, tours)
 }
 
@@ -81,6 +85,10 @@ func (h *TourHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		respondError(w, http.StatusNotFound, err.Error())
 		return
+	}
+	remaining, err := h.service.GetRemainingSpots(r.Context(), tour.ID)
+	if err == nil {
+		tour.RemainingSpots = remaining
 	}
 	respondJSON(w, http.StatusOK, tour)
 }
@@ -125,6 +133,10 @@ func (h *TourHandler) GetByDestinationID(w http.ResponseWriter, r *http.Request)
 	}
 	tours, err := h.service.GetByDestinationID(r.Context(), id)
 	if err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if err := h.service.CalculateRemainingSpots(r.Context(), tours); err != nil {
 		respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

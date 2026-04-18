@@ -60,6 +60,10 @@ func (s *BookingService) GetPendingBookingsCount(ctx context.Context, tourID int
 	return s.repo.GetPendingBookingsCountByTourID(ctx, tourID)
 }
 
+func (s *BookingService) GetActiveBookingsCount(ctx context.Context, tourID int) (int, error) {
+	return s.repo.GetActiveBookingsCount(ctx, tourID)
+}
+
 func (s *BookingService) ConfirmPendingBookings(ctx context.Context, tourID int) error {
 	return s.repo.ConfirmPendingBookingsForTour(ctx, tourID)
 }

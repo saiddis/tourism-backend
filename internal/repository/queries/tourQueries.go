@@ -79,6 +79,14 @@ ORDER BY t.start_date, t.id`
 UPDATE tours SET capacity = capacity - 1 WHERE id = $1 AND capacity > 0`
 	IncrementTourCapacity = `
 UPDATE tours SET capacity = capacity + 1 WHERE id = $1`
+	GetRemainingSpotsByTourID = `
+SELECT COALESCE(
+	(SELECT t.capacity - COALESCE(SUM(CASE WHEN b.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
+	FROM bookings b WHERE b.tour_id = t.id GROUP BY t.capacity),
+	t.capacity
+) as remaining_spots
+FROM tours t
+WHERE t.id = $1`
 )
 
 // TOUR HIGHLIGHTS

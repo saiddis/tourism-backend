@@ -42,7 +42,7 @@ func (h *PaymentHandler) Create(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	if claims.Role != "manager" && claims.Role != "admin" && booking.UserID != claims.UserID {
+	if claims.Role != "provider" && claims.Role != "admin" && booking.UserID != claims.UserID {
 		respondError(w, http.StatusForbidden, "forbidden")
 		return
 	}

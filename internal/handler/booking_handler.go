@@ -55,8 +55,13 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2. Check capacity
-	if tour.Capacity <= 0 {
+	// 2. Check remaining spots
+	remaining, err := h.tourService.GetRemainingSpots(ctx, tour.ID)
+	if err != nil {
+		respondError(w, http.StatusInternalServerError, "failed to check availability")
+		return
+	}
+	if remaining <= 0 {
 		respondError(w, http.StatusBadRequest, "tour is fully booked")
 		return
 	}
@@ -114,10 +119,7 @@ func (h *BookingHandler) Create(w http.ResponseWriter, r *http.Request) {
 		// Non-critical: payment record failed but booking succeeded
 	}
 
-	// 7. Decrement tour capacity
-	h.tourService.DecrementCapacity(ctx, tour.ID)
-
-	// 8. Get updated user with new balance
+	// 7. Get updated user with new balance
 	user, err := h.userService.GetByID(ctx, claims.UserID)
 	if err == nil {
 		tokens, err := middleware.GenerateTokenPair(user.ID, user.Email, string(user.Role), user.Name, user.AvatarURL, user.Balance)
@@ -155,7 +157,7 @@ func (h *BookingHandler) GetByUserID(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
-	if claims.UserID != id && claims.Role != "manager" && claims.Role != "admin" {
+	if claims.UserID != id && claims.Role != "provider" && claims.Role != "admin" {
 		respondError(w, http.StatusForbidden, "forbidden")
 		return
 	}
@@ -197,7 +199,7 @@ func (h *BookingHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Non-managers can only cancel their own bookings
-	if claims.Role != "manager" && claims.Role != "admin" {
+	if claims.Role != "provider" && claims.Role != "admin" {
 		if req.Status != domain.BookingStatusCancelled {
 			respondError(w, http.StatusForbidden, "forbidden")
 			return
@@ -215,7 +217,6 @@ func (h *BookingHandler) UpdateStatus(w http.ResponseWriter, r *http.Request) {
 			respondError(w, http.StatusInternalServerError, "failed to process refund")
 			return
 		}
-		h.tourService.IncrementCapacity(ctx, booking.TourID)
 	}
 
 	if err := h.service.UpdateStatus(ctx, id, req.Status); err != nil {
