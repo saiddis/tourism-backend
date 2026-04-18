@@ -28,7 +28,7 @@ func Load() *Config {
 		AccessTokenSecret:  getEnv("ACCESS_TOKEN_SECRET", "tourism"),
 		RefreshTokenSecret: getEnv("REFRESH_TOKEN_SECRET", "tourism"),
 		CookieDomain:       getEnv("COOKIE_DOMAIN", ""),
-		UploadDir:          getEnv("UPLOAD_DIR", "./uploads/avatars"),
+		UploadDir:          getEnv("UPLOAD_DIR", "./uploads"),
 	}
 }
 
