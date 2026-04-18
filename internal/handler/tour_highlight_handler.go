@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"tourism-backend/internal/domain"
 	middleware "tourism-backend/internal/middlewares"
@@ -37,7 +38,7 @@ func (h *TourHighlightHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	// Check content type for multipart
 	contentType := r.Header.Get("Content-Type")
-	if len(contentType) > 6 && contentType[:6] == "multi" {
+	if contentType != "" && strings.HasPrefix(contentType, "multipart/form-data") {
 		h.createWithFile(w, r, tourID)
 		return
 	}
