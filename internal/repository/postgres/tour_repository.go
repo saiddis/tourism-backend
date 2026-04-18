@@ -146,6 +146,11 @@ func (r *TourRepositoryPostgres) GetRemainingSpots(ctx context.Context, tourID i
 	return remaining, err
 }
 
+func (r *TourRepositoryPostgres) RenewTour(ctx context.Context, id int, startDate, endDate string) error {
+	_, err := r.db.ExecContext(ctx, queries.RenewTour, id, startDate, endDate)
+	return err
+}
+
 func (r *TourRepositoryPostgres) GetHighlightsByTourID(ctx context.Context, tourID int) ([]*domain.TourHighlight, error) {
 	rows, err := r.db.QueryContext(ctx, queries.GetTourHighlightsByTourID, tourID)
 	if err != nil {

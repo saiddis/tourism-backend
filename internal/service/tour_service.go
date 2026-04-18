@@ -74,3 +74,7 @@ func (s *TourService) CalculateRemainingSpots(ctx context.Context, tours []*doma
 func (s *TourService) GetRemainingSpots(ctx context.Context, tourID int) (int, error) {
 	return s.repo.GetRemainingSpots(ctx, tourID)
 }
+
+func (s *TourService) RenewTour(ctx context.Context, id int, startDate, endDate string) error {
+	return s.repo.RenewTour(ctx, id, startDate, endDate)
+}

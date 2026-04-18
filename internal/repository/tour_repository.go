@@ -15,4 +15,5 @@ type TourRepository interface {
 	DecrementCapacity(ctx context.Context, id int) error
 	IncrementCapacity(ctx context.Context, id int) error
 	GetRemainingSpots(ctx context.Context, tourID int) (int, error)
+	RenewTour(ctx context.Context, id int, startDate, endDate string) error
 }

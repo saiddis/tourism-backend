@@ -142,3 +142,55 @@ func (h *TourHandler) GetByDestinationID(w http.ResponseWriter, r *http.Request)
 	}
 	respondJSON(w, http.StatusOK, tours)
 }
+
+func (h *TourHandler) Renew(w http.ResponseWriter, r *http.Request) {
+	claims := middleware.GetClaims(r)
+	if claims == nil {
+		respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	provider, err := h.providerService.GetByUserID(r.Context(), claims.UserID)
+	if err != nil || provider == nil || !provider.Active {
+		respondError(w, http.StatusForbidden, "no active provider profile")
+		return
+	}
+
+	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+	if err != nil {
+		respondError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	tour, err := h.service.GetByID(r.Context(), id)
+	if err != nil {
+		respondError(w, http.StatusNotFound, "tour not found")
+		return
+	}
+
+	if tour.ProviderID == nil || *tour.ProviderID != provider.ID {
+		respondError(w, http.StatusForbidden, "not authorized to renew this tour")
+		return
+	}
+
+	var req struct {
+		StartDate string `json:"start_date"`
+		EndDate   string `json:"end_date"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.StartDate == "" || req.EndDate == "" {
+		respondError(w, http.StatusBadRequest, "start_date and end_date are required")
+		return
+	}
+
+	if err := h.service.RenewTour(r.Context(), id, req.StartDate, req.EndDate); err != nil {
+		respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{"message": "tour renewed successfully"})
+}

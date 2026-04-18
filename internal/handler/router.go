@@ -62,6 +62,7 @@ func NewRouter(
 		r.Get("/providers/me", providerHandler.GetByUserID)
 		r.Put("/providers/{id}", providerHandler.Update)
 		r.Post("/providers/me/tours", tourHandler.CreateForProvider)
+		r.Put("/tours/{id}/renew", tourHandler.Renew)
 		r.Post("/tours/{id}/highlights", tourHighlightHandler.Create)
 		r.Delete("/tours/{id}/highlights/{highlightId}", tourHighlightHandler.Delete)
 

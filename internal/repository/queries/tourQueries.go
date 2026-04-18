@@ -87,6 +87,8 @@ SELECT COALESCE(
 ) as remaining_spots
 FROM tours t
 WHERE t.id = $1`
+	RenewTour = `
+UPDATE tours SET start_date = $2, end_date = $3 WHERE id = $1`
 )
 
 // TOUR HIGHLIGHTS
