@@ -92,5 +92,10 @@ SELECT id, tour_id, image_url, sort_order, created_at
 FROM tour_highlights
 WHERE tour_id = $1
 ORDER BY sort_order, id`
+	GetTourHighlightsByTourIDs = `
+SELECT id, tour_id, image_url, sort_order, created_at
+FROM tour_highlights
+WHERE tour_id = ANY($1)
+ORDER BY tour_id, sort_order, id`
 	DeleteTourHighlight = `DELETE FROM tour_highlights WHERE id = $1`
 )

@@ -26,6 +26,10 @@ func (r *TourRepositoryPostgres) GetByID(ctx context.Context, id int) (*domain.T
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
+	if err != nil {
+		return nil, err
+	}
+	tour.Highlights, err = r.GetHighlightsByTourID(ctx, id)
 	return &tour, err
 }
 
@@ -44,6 +48,22 @@ func (r *TourRepositoryPostgres) GetAll(ctx context.Context) ([]*domain.Tour, er
 		}
 		tours = append(tours, &tour)
 	}
+
+	// Fetch highlights for all tours
+	if len(tours) > 0 {
+		tourIDs := make([]int, len(tours))
+		for i, t := range tours {
+			tourIDs[i] = t.ID
+		}
+		highlightsMap, err := r.GetHighlightsByTourIDs(ctx, tourIDs)
+		if err != nil {
+			return nil, err
+		}
+		for _, tour := range tours {
+			tour.Highlights = highlightsMap[tour.ID]
+		}
+	}
+
 	return tours, nil
 }
 
@@ -62,6 +82,22 @@ func (r *TourRepositoryPostgres) GetByDestinationID(ctx context.Context, destina
 		}
 		tours = append(tours, &tour)
 	}
+
+	// Fetch highlights for all tours
+	if len(tours) > 0 {
+		tourIDs := make([]int, len(tours))
+		for i, t := range tours {
+			tourIDs[i] = t.ID
+		}
+		highlightsMap, err := r.GetHighlightsByTourIDs(ctx, tourIDs)
+		if err != nil {
+			return nil, err
+		}
+		for _, tour := range tours {
+			tour.Highlights = highlightsMap[tour.ID]
+		}
+	}
+
 	return tours, nil
 }
 
@@ -102,6 +138,76 @@ func (r *TourRepositoryPostgres) DecrementCapacity(ctx context.Context, id int) 
 func (r *TourRepositoryPostgres) IncrementCapacity(ctx context.Context, id int) error {
 	_, err := r.db.ExecContext(ctx, queries.IncrementTourCapacity, id)
 	return err
+}
+
+func (r *TourRepositoryPostgres) GetHighlightsByTourID(ctx context.Context, tourID int) ([]*domain.TourHighlight, error) {
+	rows, err := r.db.QueryContext(ctx, queries.GetTourHighlightsByTourID, tourID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	highlights := make([]*domain.TourHighlight, 0)
+	for rows.Next() {
+		var h domain.TourHighlight
+		err := rows.Scan(&h.ID, &h.TourID, &h.ImageURL, &h.SortOrder, &h.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		highlights = append(highlights, &h)
+	}
+	return highlights, nil
+}
+
+func (r *TourRepositoryPostgres) GetHighlightsByTourIDs(ctx context.Context, tourIDs []int) (map[int][]*domain.TourHighlight, error) {
+	if len(tourIDs) == 0 {
+		return make(map[int][]*domain.TourHighlight), nil
+	}
+
+	result := make(map[int][]*domain.TourHighlight)
+	for _, id := range tourIDs {
+		result[id] = make([]*domain.TourHighlight, 0)
+	}
+
+	rows, err := r.db.QueryContext(ctx, queries.GetTourHighlightsByTourIDs, toSlice(tourIDs))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var h domain.TourHighlight
+		err := rows.Scan(&h.ID, &h.TourID, &h.ImageURL, &h.SortOrder, &h.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		result[h.TourID] = append(result[h.TourID], &h)
+	}
+
+	// Sort each tour's highlights by sort_order
+	for _, highlights := range result {
+		sortHighlights(highlights)
+	}
+
+	return result, nil
+}
+
+func sortHighlights(highlights []*domain.TourHighlight) {
+	for i := 0; i < len(highlights)-1; i++ {
+		for j := i + 1; j < len(highlights); j++ {
+			if highlights[i].SortOrder > highlights[j].SortOrder {
+				highlights[i], highlights[j] = highlights[j], highlights[i]
+			}
+		}
+	}
+}
+
+func toSlice(ids []int) []interface{} {
+	result := make([]interface{}, len(ids))
+	for i, id := range ids {
+		result[i] = id
+	}
+	return result
 }
 
 type rowScanner interface {
