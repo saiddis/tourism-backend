@@ -13,7 +13,12 @@ SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
 		(SELECT t.capacity - COALESCE(SUM(CASE WHEN b2.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
 		FROM bookings b2 WHERE b2.tour_id = t.id GROUP BY t.capacity),
 		t.capacity
-	) as remaining_spots
+	) as remaining_spots,
+	COALESCE(
+		(SELECT json_agg(json_build_object('id', th.id, 'tour_id', th.tour_id, 'image_url', th.image_url, 'sort_order', th.sort_order) ORDER BY th.sort_order)
+		FROM tour_highlights th WHERE th.tour_id = t.id),
+		'[]'::json
+	) as highlights
 FROM bookings b
 JOIN tours t ON t.id = b.tour_id
 JOIN destinations d ON d.id = t.destination_id
@@ -26,7 +31,12 @@ SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
 		(SELECT t.capacity - COALESCE(SUM(CASE WHEN b2.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
 		FROM bookings b2 WHERE b2.tour_id = t.id GROUP BY t.capacity),
 		t.capacity
-	) as remaining_spots
+	) as remaining_spots,
+	COALESCE(
+		(SELECT json_agg(json_build_object('id', th.id, 'tour_id', th.tour_id, 'image_url', th.image_url, 'sort_order', th.sort_order) ORDER BY th.sort_order)
+		FROM tour_highlights th WHERE th.tour_id = t.id),
+		'[]'::json
+	) as highlights
 FROM bookings b
 JOIN tours t ON t.id = b.tour_id
 JOIN destinations d ON d.id = t.destination_id
@@ -40,7 +50,12 @@ SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
 		(SELECT t.capacity - COALESCE(SUM(CASE WHEN b2.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
 		FROM bookings b2 WHERE b2.tour_id = t.id GROUP BY t.capacity),
 		t.capacity
-	) as remaining_spots
+	) as remaining_spots,
+	COALESCE(
+		(SELECT json_agg(json_build_object('id', th.id, 'tour_id', th.tour_id, 'image_url', th.image_url, 'sort_order', th.sort_order) ORDER BY th.sort_order)
+		FROM tour_highlights th WHERE th.tour_id = t.id),
+		'[]'::json
+	) as highlights
 FROM bookings b
 JOIN tours t ON t.id = b.tour_id
 JOIN destinations d ON d.id = t.destination_id
@@ -79,7 +94,12 @@ SELECT b.id,b.user_id,b.tour_id,b.status,b.created_at,
 		(SELECT t.capacity - COALESCE(SUM(CASE WHEN b2.status IN ('pending', 'confirmed') THEN 1 ELSE 0 END), 0)
 		FROM bookings b2 WHERE b2.tour_id = t.id GROUP BY t.capacity),
 		t.capacity
-	) as remaining_spots
+	) as remaining_spots,
+	COALESCE(
+		(SELECT json_agg(json_build_object('id', th.id, 'tour_id', th.tour_id, 'image_url', th.image_url, 'sort_order', th.sort_order) ORDER BY th.sort_order)
+		FROM tour_highlights th WHERE th.tour_id = t.id),
+		'[]'::json
+	) as highlights
 FROM bookings b
 JOIN tours t ON t.id = b.tour_id
 JOIN destinations d ON d.id = t.destination_id

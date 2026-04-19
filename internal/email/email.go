@@ -7,8 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mailersend/mailersend-go"
 	"tourism-backend/internal/domain"
+
+	"github.com/mailersend/mailersend-go"
 )
 
 type EmailService struct {
@@ -61,11 +62,6 @@ Facebook: %s
 
 Application ID: %d
 Submitted: %s
-
----
-Quick Actions:
-Accept: %s
-Reject: %s
 `,
 		userName,
 		userEmail,
@@ -78,8 +74,6 @@ Reject: %s
 		nullableString(app.FacebookURL),
 		app.ID,
 		app.CreatedAt.Format("2006-01-02 15:04:05"),
-		acceptURL,
-		rejectURL,
 	)
 
 	return s.send(s.adminEmail, subject, body)

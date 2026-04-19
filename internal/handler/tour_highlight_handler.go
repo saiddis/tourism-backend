@@ -89,7 +89,7 @@ func (h *TourHighlightHandler) createWithFile(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	uploadDir := getUploadDir()
+	uploadDir := getHighlightUploadDir()
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to create upload directory")
 		return
@@ -110,7 +110,7 @@ func (h *TourHighlightHandler) createWithFile(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	imageURL := fmt.Sprintf("/uploads/%s", filename)
+	imageURL := fmt.Sprintf("/uploads/highlights/%s", filename)
 
 	highlight := &domain.TourHighlight{
 		TourID:   tourID,
@@ -151,4 +151,11 @@ func (h *TourHighlightHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondJSON(w, http.StatusOK, map[string]string{"message": "highlight deleted"})
+}
+
+func getHighlightUploadDir() string {
+	if uploadDir != "" {
+		return uploadDir + "/highlights"
+	}
+	return "./uploads/highlights"
 }

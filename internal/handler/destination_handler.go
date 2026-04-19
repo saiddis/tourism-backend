@@ -148,5 +148,8 @@ func (h *DestinationHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func getDestinationUploadDir() string {
+	if uploadDir != "" {
+		return uploadDir + "/destinations"
+	}
 	return "./uploads/destinations"
 }

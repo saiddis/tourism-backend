@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 	"tourism-backend/internal/domain"
 	"tourism-backend/internal/repository"
@@ -177,6 +178,7 @@ func scanBooking(scanner rowScanner, booking *domain.Booking) error {
 	var destinationCreatedAt sql.NullTime
 	var joinedTourID int
 	var joinedDestinationID int
+	var highlightsJSON []byte
 	err := scanner.Scan(
 		&booking.ID,
 		&booking.UserID,
@@ -198,6 +200,7 @@ func scanBooking(scanner rowScanner, booking *domain.Booking) error {
 		&destinationImageURL,
 		&destinationCreatedAt,
 		&booking.RemainingSpots,
+		&highlightsJSON,
 	)
 	if err != nil {
 		return err
@@ -209,5 +212,16 @@ func scanBooking(scanner rowScanner, booking *domain.Booking) error {
 	booking.TourDescription = tourDescription.String
 	booking.DestinationDescription = destinationDescription.String
 	booking.DestinationImageURL = destinationImageURL.String
+
+	if highlightsJSON != nil {
+		var highlights []domain.TourHighlight
+		if err := json.Unmarshal(highlightsJSON, &highlights); err == nil {
+			booking.TourHighlights = make([]*domain.TourHighlight, len(highlights))
+			for i := range highlights {
+				booking.TourHighlights[i] = &highlights[i]
+			}
+		}
+	}
+
 	return nil
 }

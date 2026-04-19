@@ -304,7 +304,7 @@ func (h *UserHandler) UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	avatarDir := getUploadDir()
+	avatarDir := getAvatarUploadDir()
 	if err := os.MkdirAll(avatarDir, 0755); err != nil {
 		respondError(w, http.StatusInternalServerError, "failed to create upload directory")
 		return
@@ -385,9 +385,9 @@ func SetUploadDir(dir string) {
 	uploadDir = dir
 }
 
-func getUploadDir() string {
+func getAvatarUploadDir() string {
 	if uploadDir != "" {
-		return uploadDir
+		return uploadDir + "/avatars"
 	}
 	return "./uploads/avatars"
 }
